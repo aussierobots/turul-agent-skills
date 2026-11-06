@@ -1,0 +1,7 @@
+{
+  "valid": false,
+  "errors": [
+    "yaml-invalid"
+  ],
+  "load": "warn"
+}

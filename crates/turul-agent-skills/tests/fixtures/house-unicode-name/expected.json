@@ -1,0 +1,7 @@
+{
+  "valid": false,
+  "errors": [
+    "name-invalid-chars"
+  ],
+  "load": "skip"
+}

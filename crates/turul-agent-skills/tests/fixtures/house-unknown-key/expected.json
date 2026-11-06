@@ -1,0 +1,7 @@
+{
+  "valid": false,
+  "errors": [
+    "unexpected-fields"
+  ],
+  "load": "warn"
+}

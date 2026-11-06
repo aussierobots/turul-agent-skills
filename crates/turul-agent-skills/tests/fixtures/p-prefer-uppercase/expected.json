@@ -1,0 +1,10 @@
+{
+  "layout": "both-cases",
+  "valid": true,
+  "errors": [],
+  "load": "ok",
+  "properties": {
+    "name": "my-skill",
+    "description": "uppercase"
+  }
+}

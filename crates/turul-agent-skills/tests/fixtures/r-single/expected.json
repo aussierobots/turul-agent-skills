@@ -1,0 +1,17 @@
+{
+  "valid": true,
+  "errors": [],
+  "load": "ok",
+  "prompt": {
+    "contains": [
+      "<available_skills>",
+      "</available_skills>",
+      "<name>\nmy-skill\n</name>",
+      "<description>\nA test skill\n</description>",
+      "<location>",
+      "SKILL.md"
+    ],
+    "absent": [],
+    "count": {}
+  }
+}

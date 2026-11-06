@@ -1,0 +1,17 @@
+{
+  "valid": true,
+  "errors": [],
+  "load": "ok",
+  "prompt": {
+    "contains": [
+      "&lt;foo&gt;",
+      "&amp;",
+      "&lt;bar&gt;"
+    ],
+    "absent": [
+      "<foo>",
+      "<bar>"
+    ],
+    "count": {}
+  }
+}

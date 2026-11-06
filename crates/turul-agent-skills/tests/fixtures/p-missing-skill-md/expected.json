@@ -1,0 +1,8 @@
+{
+  "layout": "empty-dir",
+  "valid": false,
+  "errors": [
+    "skill-md-missing"
+  ],
+  "load": "skip"
+}

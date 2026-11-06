@@ -1,0 +1,20 @@
+[package]
+name = "skill-llm"
+description = "Examples: pick and activate a skill through an LlmClient; draft and write a skill with one"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+turul-agent-skills = { workspace = true }
+turul-llm-core = { workspace = true }
+turul-llm-ollama = { workspace = true }
+async-trait = { workspace = true }
+tokio = { workspace = true }
+serde_json = { workspace = true }
+tempfile = { workspace = true }
+
+[dev-dependencies]
+assert_cmd = { workspace = true }

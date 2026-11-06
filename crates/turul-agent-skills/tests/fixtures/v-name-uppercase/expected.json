@@ -1,0 +1,7 @@
+{
+  "valid": false,
+  "errors": [
+    "name-not-lowercase"
+  ],
+  "load": "skip"
+}

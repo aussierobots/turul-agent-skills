@@ -24,7 +24,11 @@ cargo doc --no-deps --workspace
 
 cargo test -p turul-agent-skills           # Library: parse, validate, render, catalog
 cargo test -p turul-agent-skills-cli       # skills-ref-compatible CLI
-cargo test -p turul-agent-skills --test skill_name   # One ADR's contract tests
+cargo test -p turul-agent-skills --test conformance   # skills-ref corpus; others: skill_name, frontmatter,
+#   validate_and_load, render, catalog_prompt, discovery, a2a_boundary, single_owner, dependency_direction
+cargo test -p turul-agent-skills-cli --test cli       # CLI output and exit codes
+cargo test --doc --workspace               # README quick-start snippets
+cargo run -p turul-agent-skills-cli -- validate path/to/skill   # binary: turul-skills
 
 # Examples (offline stub LLM by default; live Ollama is opt-in)
 cargo run -p skill-llm --bin catalog     # LLM picks a skill from the catalog, then uses it
@@ -65,7 +69,7 @@ Every publish crate carries `LICENSE-APACHE` and `LICENSE-MIT` symlinks to `../.
 ### Crate Structure
 
 - `turul-agent-skills` — library. `SkillName` (validated newtype, the only way to obtain a name), `SkillProperties` (frontmatter), `Skill` (properties + body + location), strict validation (spec, all errors), lenient loading (client guide, diagnostics), canonical rendering back to SKILL.md, `<available_skills>` catalog, bounded discovery over caller-supplied project/user roots (every candidate goes through the same loader). No LLM, network or async deps.
-- `turul-agent-skills-cli` — `skills-ref`-compatible binary: `validate`, `read-properties`, `to-prompt`; exit codes 0/1.
+- `turul-agent-skills-cli` — `skills-ref`-compatible binary `turul-skills`: `validate`, `read-properties`, `to-prompt`; exit codes 0/1.
 - `examples/` — runnable examples that use skills with an LLM via [turul-llm](https://github.com/aussierobots/turul-llm) (`turul-llm-core` + an adapter). Offline stub by default.
 
 ### Dependency Direction (invariants)

@@ -3,6 +3,7 @@ resolver = "3"
 members = [
   "crates/turul-agent-skills",
   "crates/turul-agent-skills-cli",
+  "examples/skill-llm",
 ]
 
 [workspace.package]
@@ -12,9 +13,38 @@ authors = ["Nick Hortovanyi <nick@aussierobots.com.au>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/aussierobots/turul-agent-skills"
 keywords = ["agent-skills", "skill", "agent", "llm", "ai"]
-categories = ["parser-implementations", "command-line-utilities"]
 rust-version = "1.94"
 
 [workspace.dependencies]
+turul-agent-skills = { path = "crates/turul-agent-skills", version = "0.1" }
+clap = { version = "4.6", features = ["derive"] }
+unicode-normalization = "0.1"
+unicode-properties = { version = "0.1", default-features = false, features = ["general-category"] }
+saphyr-parser = "0.3"
+
+# Examples
+turul-llm-core = "0.1"
+turul-llm-ollama = "0.1"
+async-trait = "0.1"
+tokio = { version = "1", features = ["rt", "macros"] }
+
 # Test deps
 toml = "1.2"
+serde_json = "1"
+tempfile = "3"
+assert_cmd = "2.2"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+
+# Line tables, not full debuginfo: file:line in backtraces without the type
+# information only a debugger reads.
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = 0
+
+[profile.test.package."*"]
+debug = 0

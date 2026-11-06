@@ -1,0 +1,13 @@
+<available_skills>
+<skill>
+<name>
+my-skill
+</name>
+<description>
+A test skill
+</description>
+<location>
+/T/my-skill/SKILL.md
+</location>
+</skill>
+</available_skills>

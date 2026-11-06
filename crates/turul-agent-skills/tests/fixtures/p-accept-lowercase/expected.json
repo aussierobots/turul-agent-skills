@@ -1,0 +1,7 @@
+{
+  "valid": false,
+  "errors": [
+    "frontmatter-missing"
+  ],
+  "load": "skip"
+}

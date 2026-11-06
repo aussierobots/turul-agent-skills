@@ -1,0 +1,7 @@
+{
+  "valid": false,
+  "errors": [
+    "name-consecutive-hyphens"
+  ],
+  "load": "skip"
+}

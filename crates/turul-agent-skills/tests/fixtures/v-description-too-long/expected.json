@@ -1,0 +1,7 @@
+{
+  "valid": false,
+  "errors": [
+    "description-too-long"
+  ],
+  "load": "warn"
+}

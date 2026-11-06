@@ -1,0 +1,8 @@
+{
+  "parse": "ok",
+  "entries": {
+    "name": "my-skill",
+    "description": "A test skill"
+  },
+  "body_contains": "# My Skill"
+}

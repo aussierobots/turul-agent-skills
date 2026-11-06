@@ -1,0 +1,8 @@
+{
+  "layout": "missing",
+  "valid": false,
+  "errors": [
+    "path-not-found"
+  ],
+  "load": "skip"
+}

@@ -1,0 +1,7 @@
+{
+  "valid": false,
+  "errors": [
+    "name-hyphen-edge"
+  ],
+  "load": "skip"
+}

@@ -1,0 +1,13 @@
+<available_skills>
+<skill>
+<name>
+special-skill
+</name>
+<description>
+Use &lt;foo&gt; &amp; &lt;bar&gt; tags
+</description>
+<location>
+/T/special-skill/SKILL.md
+</location>
+</skill>
+</available_skills>

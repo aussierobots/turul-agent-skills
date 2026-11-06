@@ -1,0 +1,12 @@
+{
+  "valid": true,
+  "errors": [],
+  "load": "ok",
+  "properties": {
+    "name": "my-skill",
+    "description": "A test skill",
+    "metadata": {
+      "count": "42"
+    }
+  }
+}

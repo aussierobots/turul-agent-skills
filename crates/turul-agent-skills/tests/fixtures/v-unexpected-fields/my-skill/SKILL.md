@@ -1,0 +1,6 @@
+---
+name: my-skill
+description: A test skill
+unknown_field: should not be here
+---
+Body

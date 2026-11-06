@@ -1,0 +1,7 @@
+{
+  "valid": false,
+  "errors": [
+    "compatibility-too-long"
+  ],
+  "load": "warn"
+}

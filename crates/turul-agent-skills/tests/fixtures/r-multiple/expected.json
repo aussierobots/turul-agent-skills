@@ -1,0 +1,13 @@
+{
+  "prompt": {
+    "contains": [
+      "skill-a",
+      "skill-b"
+    ],
+    "absent": [],
+    "count": {
+      "<skill>": 2,
+      "</skill>": 2
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "layout": "regular-file",
+  "valid": false,
+  "errors": [
+    "not-a-directory"
+  ],
+  "load": "skip"
+}

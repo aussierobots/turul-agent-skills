@@ -1,0 +1,24 @@
+<available_skills>
+<skill>
+<name>
+skill-a
+</name>
+<description>
+First skill
+</description>
+<location>
+/T/skill-a/SKILL.md
+</location>
+</skill>
+<skill>
+<name>
+skill-b
+</name>
+<description>
+Second skill
+</description>
+<location>
+/T/skill-b/SKILL.md
+</location>
+</skill>
+</available_skills>

@@ -2,9 +2,9 @@
 
 ## Current State
 
-- Bootstrap. Two stub crates (`turul-agent-skills`, `turul-agent-skills-cli`), no format logic yet; the plan is `docs/TASKS.md`.
+- 0.1.0 implemented: `turul-agent-skills` (parse, validate, load, render, catalog, activation, discover) and `turul-agent-skills-cli` (binary `turul-skills`: `validate`, `read-properties`, `to-prompt`). Contract tests in `crates/*/tests/` (`conformance`, `skill_name`, `frontmatter`, `validate_and_load`, `render`, `catalog_prompt`, `discovery`, `a2a_boundary`, `single_owner`, `dependency_direction`, `cli`). The plan is `docs/TASKS.md`.
 - Target: the [Agent Skills specification](https://agentskills.io/specification) (Linux Foundation / AAIF), with the `skills-ref` reference implementation as conformance oracle.
-- Planned surface: `turul-agent-skills` (library: parse, validate, load, render, catalog, discover), `turul-agent-skills-cli` (`skills-ref`-compatible binary), `examples/` using [turul-llm](https://github.com/aussierobots/turul-llm).
+- Surface: the two crates above and `examples/skill-llm` (`cargo run -p skill-llm --bin catalog` / `--bin author`; offline stub, `RUN_OLLAMA_SMOKE=1` for live Ollama) using [turul-llm](https://github.com/aussierobots/turul-llm).
 - Primary downstream consumer: [turul-a2a](https://github.com/aussierobots/turul-a2a), which will create and modify SKILL.md through this crate.
 
 ## Source of Truth
