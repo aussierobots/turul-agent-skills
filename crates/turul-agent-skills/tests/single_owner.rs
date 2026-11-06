@@ -123,7 +123,8 @@ fn parse_skill_md_called_only_from_validate_and_load() {
         .filter(|(path, text)| {
             let allowed = ["validate.rs", "load.rs", "parse.rs"]
                 .iter()
-                .any(|f| path.ends_with(Path::new("crates/turul-agent-skills/src").join(f)));
+                .any(|f| path.ends_with(Path::new("crates/turul-agent-skills/src").join(f)))
+                || path.ends_with("examples/skill-llm/src/bin/smoke.rs");
             !allowed
                 && text.lines().any(|line| {
                     line.contains("parse_skill_md(") && !line.contains("fn parse_skill_md(")

@@ -174,8 +174,8 @@ fn check_name(
     };
     let Some(candidate) = text(value).filter(|t| !t.trim().is_empty()) else {
         errors.push(error(
-            ErrorCode::NameEmpty,
-            "Field 'name' must be a non-empty string",
+            NameViolation::Empty.code(),
+            NameViolation::Empty.message(""),
         ));
         return None;
     };
@@ -191,24 +191,7 @@ fn check_name(
         ));
     }
     for violation in violations {
-        errors.push(match violation {
-            NameViolation::Empty => error(ErrorCode::NameEmpty, "Field 'name' must be a non-empty string"),
-            NameViolation::NotLowercase => {
-                error(ErrorCode::NameNotLowercase, format!("Skill name '{normalized}' must be lowercase"))
-            }
-            NameViolation::HyphenEdge => {
-                error(ErrorCode::NameHyphenEdge, "Skill name cannot start or end with a hyphen")
-            }
-            NameViolation::ConsecutiveHyphens => {
-                error(ErrorCode::NameConsecutiveHyphens, "Skill name cannot contain consecutive hyphens")
-            }
-            NameViolation::InvalidChars => error(
-                ErrorCode::NameInvalidChars,
-                format!(
-                    "Skill name '{normalized}' contains invalid characters. Only letters, digits, and hyphens are allowed."
-                ),
-            ),
-        });
+        errors.push(error(violation.code(), violation.message(&normalized)));
     }
     let normalized_dir: String = dir_name.nfkc().collect();
     if normalized_dir != normalized {

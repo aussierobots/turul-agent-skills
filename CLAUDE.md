@@ -33,7 +33,9 @@ cargo run -p turul-agent-skills-cli -- validate path/to/skill   # binary: turul-
 # Examples (offline stub LLM by default; live Ollama is opt-in)
 cargo run -p skill-llm --bin catalog     # LLM picks a skill from the catalog, then uses it
 cargo run -p skill-llm --bin author      # LLM drafts a SKILL.md; validate, write, modify
+cargo run -p skill-llm --bin smoke       # every public capability, asserted step by step
 RUN_OLLAMA_SMOKE=1 cargo run -p skill-llm --bin catalog
+RUN_OLLAMA_SMOKE=1 cargo run -p skill-llm --bin smoke
 ```
 
 **All crate dependencies MUST use `workspace = true`** — versions live in root `[workspace.dependencies]`, dev-dependencies included. Never put a version number in a crate's own `Cargo.toml`.

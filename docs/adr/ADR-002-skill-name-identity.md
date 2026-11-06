@@ -30,7 +30,8 @@ name, so length and directory match cannot live in the identity type.
 | Artifact | Owning symbol | Entrypoint | File |
 |---|---|---|---|
 | Skill identity | `SkillName` (private `String` field) | `SkillName::parse(&str) -> Result<SkillName, NameError>` | `src/name.rs` |
-| Name rule failures | `NameError { normalized: String, violations: Vec<NameViolation> }` | returned by `SkillName::parse` | `src/name.rs` |
+| Name rule failures | `NameError { normalized: String, violations: Vec<NameViolation> }`; implements `Error`, `Display` = every violation message joined by `; ` | returned by `SkillName::parse` | `src/name.rs` |
+| Name rule code and message text | `NameViolation::code()`, `NameViolation::message(&normalized)` (crate-private; `validate` consumes them) | used by `NameError`'s `Display` and the field check | `src/name.rs` |
 
 `SkillName` implements `Clone, Debug, Display, PartialEq, Eq, Hash, PartialOrd, Ord` and
 `as_str() -> &str`. It implements no `From<String>`, `From<&str>`, `FromStr`, `Default` or
@@ -93,7 +94,7 @@ is one test:
 | `SkillName(` appears only in `src/name.rs` | `skill_name_constructed_only_in_name_rs` |
 | `SkillProperties {` literal appears only in `src/parse.rs` | `skill_properties_literal_only_in_parse_rs` |
 | `SkillProperties` declares exactly the spec fields `name, description, license, compatibility, metadata, allowed_tools` | `skill_properties_fields_are_spec_fields` |
-| `parse_skill_md(` is called only from `src/validate.rs` and `src/load.rs` | `parse_skill_md_called_only_from_validate_and_load` |
+| `parse_skill_md(` is called only from `src/validate.rs` and `src/load.rs` (and the `smoke` example, which exercises it as public API) | `parse_skill_md_called_only_from_validate_and_load` |
 | `src/discover.rs` obtains skills only through `load(` | `discover_calls_load_only` |
 
 ## 3. Alternatives considered
@@ -122,3 +123,5 @@ is one test:
 - 2026-11-06 — Dependencies stated as major.minor workspace requirements; evaluated versions kept as evidence.
 - 2026-11-06 — Context notes the client guide also relaxes the character set; not followed (divergence in ADR-001).
 - 2026-11-06 — Accepted: `skill_name.rs`, `single_owner.rs` green under `cargo test --workspace`; no alternative path remains (`single_owner.rs` green: one parser, `discover` through `load` only).
+- 2026-11-06 — `NameError` implements `Error` and `Display` (`thiserror`); rule codes and message text have one owner in `name.rs`, `validate.rs` consumes them. Test `name_error_displays_every_violation_message`.
+- 2026-11-06 — `parse_skill_md_called_only_from_validate_and_load` also allows the `smoke` example, which calls the public function to exercise it.

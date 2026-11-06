@@ -14,7 +14,8 @@ pub struct Loaded {
 }
 
 /// A skill that could not be loaded, with every error found.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
+#[error("{}", self.errors.first().map_or("", ValidationError::message))]
 pub struct LoadSkip {
     /// Every error found. The first is the reason the skill was skipped: the
     /// errors that cause a skip come first, in `skills-ref` order (missing

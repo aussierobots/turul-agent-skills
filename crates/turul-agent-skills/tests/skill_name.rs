@@ -125,3 +125,21 @@ fn ord_is_byte_order() {
     let order: Vec<&str> = names.iter().map(SkillName::as_str).collect();
     assert_eq!(order, ["a", "a-b", "b", "z", "é"]);
 }
+
+#[test]
+fn name_error_displays_every_violation_message() {
+    let error = SkillName::parse("-My--Skill_").unwrap_err();
+    assert_eq!(
+        error.to_string(),
+        "Skill name '-My--Skill_' must be lowercase; \
+         Skill name cannot start or end with a hyphen; \
+         Skill name cannot contain consecutive hyphens; \
+         Skill name '-My--Skill_' contains invalid characters. Only letters, digits, and hyphens are allowed."
+    );
+    let source: &dyn std::error::Error = &error;
+    assert_eq!(source.to_string(), error.to_string());
+    assert_eq!(
+        SkillName::parse("").unwrap_err().to_string(),
+        "Field 'name' must be a non-empty string"
+    );
+}

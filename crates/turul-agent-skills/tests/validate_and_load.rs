@@ -574,3 +574,21 @@ fn validate_and_load_never_panic() {
     let _ = validate(Path::new(""));
     let _ = load(Path::new(""));
 }
+
+#[test]
+fn load_skip_displays_first_error() {
+    let skip = lenient("my-skill", "description: d").unwrap_err();
+    assert_eq!(
+        skip.to_string(),
+        "Missing required field in frontmatter: name"
+    );
+    assert_eq!(skip.to_string(), skip.errors[0].message());
+    let source: &dyn std::error::Error = &skip;
+    assert_eq!(source.to_string(), skip.to_string());
+}
+
+#[test]
+fn error_code_displays_its_stable_code() {
+    assert_eq!(ErrorCode::PathNotFound.to_string(), "path-not-found");
+    assert_eq!(ErrorCode::NameDirMismatch.to_string(), "name-dir-mismatch");
+}

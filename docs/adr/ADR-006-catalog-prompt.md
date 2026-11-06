@@ -39,7 +39,7 @@ directory and a `<skill_resources>` list; "Listing bundled resources" says to li
   both are escaped.
 - `<location>` holds `location().to_string_lossy()` **unescaped** (parity). The model uses it as
   a file-read argument, and an escaped path would name a different file. A skill without a
-  location (built with `Skill::new`) gets no `<location>` lines; the client guide makes the field
+  location (built with `SkillBuilder`) gets no `<location>` lines; the client guide makes the field
   optional.
 
 Golden bytes (`\n` shown as line breaks; no final newline):
@@ -122,3 +122,4 @@ Relative paths in this skill are relative to the skill directory.
 - 2026-11-06 — Golden placeholder `/T` and the `r-empty` reference-only golden stated.
 - 2026-11-06 — `activation_escapes_name_attribute` replaced by `activation_name_attribute_is_the_skill_name`: `SkillName` admits only letters, digits and hyphens, so the escape is unobservable.
 - 2026-11-06 — Accepted: `catalog_prompt.rs` green under `cargo test --workspace`; no alternative path remains (`single_owner.rs` green: one parser, `discover` through `load` only).
+- 2026-11-06 — Location-less skills are built with `SkillBuilder` (ADR-004); `Skill::new` is crate-private.

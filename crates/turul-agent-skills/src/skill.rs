@@ -1,5 +1,6 @@
 use std::path::{Path, PathBuf};
 
+use crate::builder::SkillBuilder;
 use crate::parse::{RawValue, SkillProperties};
 
 /// A loaded or constructed skill: spec fields, extension keys and the body.
@@ -17,8 +18,13 @@ pub struct Skill {
 }
 
 impl Skill {
+    /// A builder for a new skill; see [`SkillBuilder`].
+    pub fn builder(name: impl Into<String>, description: impl Into<String>) -> SkillBuilder {
+        SkillBuilder::new(name, description)
+    }
+
     /// A skill with no extensions and no location.
-    pub fn new(properties: SkillProperties, body: impl Into<String>) -> Skill {
+    pub(crate) fn new(properties: SkillProperties, body: impl Into<String>) -> Skill {
         Skill {
             properties,
             extensions: Vec::new(),
@@ -32,9 +38,8 @@ impl Skill {
     /// Only `load` fills them; outside the crate they are read-only.
     ///
     /// ```compile_fail
-    /// use turul_agent_skills::{Skill, SkillName, SkillProperties};
-    /// let name = SkillName::parse("a").unwrap();
-    /// let mut skill = Skill::new(SkillProperties::new(name, "d"), "");
+    /// use turul_agent_skills::Skill;
+    /// let mut skill = Skill::builder("a", "d").build().unwrap();
     /// skill.extensions.push(("k".to_string(), turul_agent_skills::RawValue::Seq(vec![])));
     /// ```
     pub fn extensions(&self) -> &[(String, RawValue)] {

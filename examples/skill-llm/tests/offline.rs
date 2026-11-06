@@ -1,4 +1,4 @@
-//! Both example binaries run end to end with the offline stub and no network.
+//! The example binaries run end to end with the offline stub and no network.
 
 use std::path::Path;
 
@@ -45,4 +45,20 @@ fn author_writes_a_valid_skill_and_edits_its_description() {
             .ends_with("Use when asked to greet someone.")
     );
     assert!(Path::new(&skill_dir).join("SKILL.md").is_file());
+}
+
+#[test]
+fn smoke_passes_every_step() {
+    let out = offline(assert_cmd::cargo_bin_cmd!("smoke"))
+        .output()
+        .unwrap();
+    assert!(out.status.success(), "{out:?}");
+    let stdout = String::from_utf8(out.stdout).unwrap();
+    assert!(stdout.contains("Mode: offline-stub"), "{stdout}");
+    assert_eq!(
+        stdout.matches("\nok ").count() + stdout.starts_with("ok ") as usize,
+        16,
+        "{stdout}"
+    );
+    assert!(stdout.contains("ok llm-revise-description"), "{stdout}");
 }

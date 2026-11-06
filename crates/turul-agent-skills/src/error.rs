@@ -1,4 +1,3 @@
-use std::fmt;
 use std::path::{Component, Path};
 
 macro_rules! error_codes {
@@ -8,6 +7,12 @@ macro_rules! error_codes {
         #[non_exhaustive]
         pub enum ErrorCode {
             $($(#[$doc])* $variant,)+
+        }
+
+        impl std::fmt::Display for ErrorCode {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                f.write_str(self.as_str())
+            }
         }
 
         impl ErrorCode {
@@ -91,7 +96,8 @@ error_codes! {
 }
 
 /// One problem found in a skill, with a stable code and a readable message.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
+#[error("{message}")]
 pub struct ValidationError {
     code: ErrorCode,
     message: String,
@@ -115,14 +121,6 @@ impl ValidationError {
         &self.message
     }
 }
-
-impl fmt::Display for ValidationError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.message)
-    }
-}
-
-impl std::error::Error for ValidationError {}
 
 /// Path text as Python `pathlib` prints it: `/`-joined, `.` components dropped, empty is `.`.
 pub fn display_path(path: &Path) -> String {

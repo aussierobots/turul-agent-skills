@@ -44,12 +44,13 @@ for error in &errors {
 Create a skill and write it to `<parent>/<name>/SKILL.md`:
 
 ```rust
-use turul_agent_skills::{Skill, SkillName, SkillProperties};
+use turul_agent_skills::SkillBuilder;
 
-let name = SkillName::parse("summarize").expect("a legal name");
-let mut properties = SkillProperties::new(name, "Summarize a document in three bullets.");
-properties.license = Some("MIT".to_string());
-let skill = Skill::new(properties, "Read the document, then answer in three bullets.\n");
+let skill = SkillBuilder::new("summarize", "Summarize a document in three bullets.")
+    .license("MIT")
+    .body("Read the document, then answer in three bullets.\n")
+    .build()
+    .expect("a legal name");
 
 let file = skill.write_to(parent.path())?;
 assert!(file.ends_with("summarize/SKILL.md"));
@@ -87,7 +88,9 @@ turul-skills to-prompt path/to/a path/to/b   # <available_skills> block
 ```sh
 cargo run -p skill-llm --bin catalog     # the model picks a skill from the catalog, then uses it
 cargo run -p skill-llm --bin author      # the model drafts a skill; it is validated, written, modified
+cargo run -p skill-llm --bin smoke       # every public capability, one assertion per step
 RUN_OLLAMA_SMOKE=1 cargo run -p skill-llm --bin catalog   # live Ollama instead of the offline stub
+RUN_OLLAMA_SMOKE=1 cargo run -p skill-llm --bin smoke
 ```
 
 ## Specification conformance

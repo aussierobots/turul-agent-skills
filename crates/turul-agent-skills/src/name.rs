@@ -3,6 +3,8 @@ use std::fmt;
 use unicode_normalization::UnicodeNormalization;
 use unicode_properties::{GeneralCategoryGroup, UnicodeGeneralCategory};
 
+use crate::error::ErrorCode;
+
 /// The identity of a skill: trimmed, NFKC-normalized, and checked against the
 /// name rules of the Agent Skills specification.
 ///
@@ -47,12 +49,52 @@ pub enum NameViolation {
 }
 
 /// Why a candidate name is not a [`SkillName`].
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
+#[error("{}", self.message())]
 pub struct NameError {
     /// The trimmed, NFKC-normalized candidate.
     pub normalized: String,
     /// Every rule that failed, in rule order.
     pub violations: Vec<NameViolation>,
+}
+
+impl NameViolation {
+    /// The validation error code for this rule.
+    pub(crate) fn code(self) -> ErrorCode {
+        match self {
+            NameViolation::Empty => ErrorCode::NameEmpty,
+            NameViolation::NotLowercase => ErrorCode::NameNotLowercase,
+            NameViolation::HyphenEdge => ErrorCode::NameHyphenEdge,
+            NameViolation::ConsecutiveHyphens => ErrorCode::NameConsecutiveHyphens,
+            NameViolation::InvalidChars => ErrorCode::NameInvalidChars,
+        }
+    }
+
+    /// The message for this rule; `normalized` is the candidate it concerns.
+    pub(crate) fn message(self, normalized: &str) -> String {
+        match self {
+            NameViolation::Empty => "Field 'name' must be a non-empty string".to_string(),
+            NameViolation::NotLowercase => format!("Skill name '{normalized}' must be lowercase"),
+            NameViolation::HyphenEdge => "Skill name cannot start or end with a hyphen".to_string(),
+            NameViolation::ConsecutiveHyphens => {
+                "Skill name cannot contain consecutive hyphens".to_string()
+            }
+            NameViolation::InvalidChars => format!(
+                "Skill name '{normalized}' contains invalid characters. Only letters, digits, and hyphens are allowed."
+            ),
+        }
+    }
+}
+
+impl NameError {
+    /// Every violation's message, joined by `; `.
+    fn message(&self) -> String {
+        self.violations
+            .iter()
+            .map(|v| v.message(&self.normalized))
+            .collect::<Vec<_>>()
+            .join("; ")
+    }
 }
 
 impl SkillName {

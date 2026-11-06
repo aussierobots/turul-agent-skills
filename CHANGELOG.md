@@ -19,6 +19,12 @@ All notable changes to this project are documented here. The format follows
   `to-prompt`, matching `skills-ref` output and exit codes.
 - `examples/skill-llm`: pick and activate a skill through an LLM, and draft, write and modify
   a skill with one. Offline stub by default; `RUN_OLLAMA_SMOKE=1` uses a live Ollama model.
+- `SkillBuilder` (`Skill::builder`): the construction entrypoint for new skills.
+- Error types (`ParseError`, `ValidationError`, `NameError`, `LoadSkip`) implement
+  `std::error::Error` via `thiserror`; `ErrorCode` implements `Display`.
+- `prelude` module for glob import of the common types and functions.
+- `examples/skill-llm`: `smoke` binary exercising every public capability; three vendored
+  Apache-2.0 reference skills from anthropics/skills under `skills/reference`.
 - README quick start whose snippets compile as doctests.
 
 ### Compatibility

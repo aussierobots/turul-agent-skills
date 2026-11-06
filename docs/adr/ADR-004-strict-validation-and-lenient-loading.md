@@ -21,11 +21,11 @@ This crate needs both, with one vocabulary of errors, one field check, and no se
 
 | Artifact | Owning symbol | Entrypoint | File |
 |---|---|---|---|
-| Error vocabulary | `ErrorCode` (`#[non_exhaustive]`, `as_str()` = stable kebab code) | — | `src/error.rs` |
-| One problem | `ValidationError { code: ErrorCode, message: String }`; accessors `code()`, `message()`; `Display` = message | built only inside the crate | `src/error.rs` |
+| Error vocabulary | `ErrorCode` (`#[non_exhaustive]`, `as_str()` = stable kebab code, `Display` = `as_str()`) | — | `src/error.rs` |
+| One problem | `ValidationError { code: ErrorCode, message: String }`; accessors `code()`, `message()`; implements `Error`, `Display` = message | built only inside the crate | `src/error.rs` |
 | Strict result | `Vec<ValidationError>` (empty = valid) | `validate(&Path) -> Vec<ValidationError>` | `src/validate.rs` |
-| Loaded skill | `Skill { pub properties: SkillProperties, extensions: Vec<(String, RawValue)>, pub body: String, location: Option<PathBuf> }`; `Skill::new(SkillProperties, impl Into<String>)` (no extensions); `extensions() -> &[(String, RawValue)]`; `location() -> Option<&Path>` | `load` or `Skill::new` | `src/skill.rs` |
-| Lenient result | `Loaded { skill: Skill, diagnostics: Vec<ValidationError> }`, `LoadSkip { errors: Vec<ValidationError> }` | `load(&Path) -> Result<Loaded, LoadSkip>` | `src/load.rs` |
+| Loaded skill | `Skill { pub properties: SkillProperties, extensions: Vec<(String, RawValue)>, pub body: String, location: Option<PathBuf> }`; `SkillBuilder::new(name, description)` with consuming setters `license`, `compatibility`, `allowed_tools`, `metadata(key, value)`, `body`, and `build() -> Result<Skill, NameError>` (the name goes through `SkillName::parse`); `Skill::builder` forwards to it; the crate-private `Skill::new` is used by the builder and `load`; `extensions() -> &[(String, RawValue)]`; `location() -> Option<&Path>` | `load` or `SkillBuilder::build` | `src/skill.rs`, `src/builder.rs` |
+| Lenient result | `Loaded { skill: Skill, diagnostics: Vec<ValidationError> }`, `LoadSkip { errors: Vec<ValidationError> }` (implements `Error`; `Display` = first error's message) | `load(&Path) -> Result<Loaded, LoadSkip>` | `src/load.rs` |
 | File lookup | private `find_skill_md(&Path) -> Option<PathBuf>` | used by `validate`, `load`, `discover` | `src/load.rs` |
 | Field check | private `check(&RawSkill, dir_name: &str) -> Checked` | used by `validate` and `load` only | `src/validate.rs` |
 | Message path text | public `display_path(&Path) -> String` (the CLI prints the same path text): components joined by `/`, `.` components dropped, empty → `.` (Python `pathlib` `str()`) | used by every message with a path | `src/error.rs` |
@@ -174,7 +174,7 @@ with diagnostics, skip = `LoadSkip`.
   characters, hyphen rules). Divergence taken by default pending maintainer review, ADR-001 §2.3.
 - Callers that need in-memory validation write the document to a directory first; there is one
   validation entrypoint. The `author` example builds a `Skill` from drafted fields with
-  `Skill::new`, writes it with `write_to`, then runs `validate` on that directory.
+  `SkillBuilder`, writes it with `write_to`, then runs `validate` on that directory.
 - The CLI also rejects a document `load` repaired with the colon fallback (ADR-007); `load` itself keeps it.
 
 ## 5. Revision log
@@ -188,3 +188,4 @@ with diagnostics, skip = `LoadSkip`.
 - 2026-11-06 — Default taken pending maintainer review: lenient names skip (divergence in ADR-001). Colon fallback stays in `load`; the CLI no longer prints repaired documents (ADR-007).
 - 2026-11-06 — `LoadSkip.errors` orders skip causes first so `errors[0]` is the skip reason.
 - 2026-11-06 — Accepted: `validate_and_load.rs`, `conformance.rs` green under `cargo test --workspace`; no alternative path remains (`single_owner.rs` green: one parser, `discover` through `load` only). Defaults marked pending maintainer review stay marked; reversing one is a revision, not a new path.
+- 2026-11-06 — `ValidationError` and `LoadSkip` implement `Error` (`thiserror`), `ErrorCode` implements `Display`; messages unchanged. `SkillBuilder` is the construction entrypoint for new skills; `Skill::new` and `SkillProperties::new` are crate-private. Tests `load_skip_displays_first_error`, `error_code_displays_its_stable_code`, `builder.rs`.

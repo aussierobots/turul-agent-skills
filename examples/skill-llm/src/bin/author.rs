@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use serde_json::json;
 use skill_llm::{Stub, client};
-use turul_agent_skills::{Skill, SkillName, SkillProperties, load, validate};
+use turul_agent_skills::prelude::*;
 use turul_llm_core::CompletionRequest;
 
 #[tokio::main(flavor = "current_thread")]
@@ -46,11 +46,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .parsed_output;
     let field = |key: &str| draft[key].as_str().ok_or(format!("draft has no `{key}`"));
 
-    let name = SkillName::parse(field("name")?).map_err(|e| format!("invalid name: {e:?}"))?;
-    let skill = Skill::new(
-        SkillProperties::new(name, field("description")?),
-        field("body")?,
-    );
+    let skill = SkillBuilder::new(field("name")?, field("description")?)
+        .body(field("body")?)
+        .build()?;
     let file = skill.write_to(&out)?;
     let dir = file.parent().expect("a written file has a directory");
 
@@ -62,9 +60,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::process::exit(1);
     }
 
-    let mut loaded = load(dir)
-        .map_err(|skip| format!("{:?}", skip.errors))?
-        .skill;
+    let mut loaded = load(dir)?.skill;
     loaded
         .properties
         .description

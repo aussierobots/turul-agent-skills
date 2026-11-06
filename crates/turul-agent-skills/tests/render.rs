@@ -3,16 +3,16 @@
 use std::fs;
 
 use tempfile::TempDir;
-use turul_agent_skills::{Skill, SkillName, SkillProperties, load, validate};
+use turul_agent_skills::{Skill, load, validate};
 
 mod common;
 use common::{case_path, expected as read_expected, fixture_ids, fixtures_dir};
 
 fn skill(description: &str) -> Skill {
-    Skill::new(
-        SkillProperties::new(SkillName::parse("my-skill").unwrap(), description),
-        "Body\n",
-    )
+    Skill::builder("my-skill", description)
+        .body("Body\n")
+        .build()
+        .unwrap()
 }
 
 fn description_line(description: &str) -> String {
@@ -252,7 +252,8 @@ fn render_body_verbatim() {
         "---\nnot frontmatter\n",
         "\t tab \n\n\n",
     ] {
-        let s = Skill::new(skill("d").properties, body);
+        let mut s = skill("d");
+        s.body = body.to_string();
         let rendered = s.render();
         assert!(rendered.ends_with(&format!("---\n{body}")), "{body:?}");
         let reloaded = load_text("my-skill", &rendered).1;

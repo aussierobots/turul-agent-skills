@@ -22,6 +22,8 @@ cargo install turul-agent-skills-cli         # the `turul-skills` command
 
 ## Quick start
 
+`use turul_agent_skills::prelude::*;` imports the types and functions below.
+
 ### Validate
 
 `validate` checks a skill directory against the specification and returns every problem found.
@@ -72,17 +74,18 @@ match load(&dir) {
 
 ### Create and write a skill
 
-A skill name is validated when it is parsed, so a `Skill` always has a legal identity.
+`SkillBuilder` parses the name, so a `Skill` always has a legal identity.
 `write_to` creates `<parent>/<name>/SKILL.md`.
 
 ```rust
-use turul_agent_skills::{Skill, SkillName, SkillProperties};
+use turul_agent_skills::SkillBuilder;
 
 # let parent = tempfile::tempdir()?;
-let name = SkillName::parse("summarize").expect("a legal name");
-let mut properties = SkillProperties::new(name, "Summarize a document in three bullets.");
-properties.license = Some("MIT".to_string());
-let skill = Skill::new(properties, "Read the document, then answer in three bullets.\n");
+let skill = SkillBuilder::new("summarize", "Summarize a document in three bullets.")
+    .license("MIT")
+    .body("Read the document, then answer in three bullets.\n")
+    .build()
+    .expect("a legal name");
 
 let file = skill.write_to(parent.path())?;
 assert!(file.ends_with("summarize/SKILL.md"));
@@ -207,12 +210,14 @@ $ echo $?
 
 `examples/skill-llm` uses [turul-llm](https://github.com/aussierobots/turul-llm) to let a model
 pick a skill from the catalog and use it (`catalog`), and to draft, validate, write and modify
-a skill (`author`). They run offline against a stub model by default:
+a skill (`author`); `smoke` asserts every public capability step by step. They run offline against a stub model by default:
 
 ```sh
 cargo run -p skill-llm --bin catalog
 cargo run -p skill-llm --bin author
+cargo run -p skill-llm --bin smoke
 RUN_OLLAMA_SMOKE=1 cargo run -p skill-llm --bin catalog   # a live local Ollama model
+RUN_OLLAMA_SMOKE=1 cargo run -p skill-llm --bin smoke
 ```
 
 ## Spec conformance and divergences

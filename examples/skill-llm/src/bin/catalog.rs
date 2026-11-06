@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use serde_json::json;
 use skill_llm::{Stub, client};
-use turul_agent_skills::{Scope, ScopeKind, activation, discover, to_prompt};
+use turul_agent_skills::prelude::*;
 use turul_llm_core::CompletionRequest;
 
 const TASK: &str = "Say hello to Ada in a formal tone.";
@@ -50,14 +50,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             })),
         )
         .await?;
-    let picked = pick.parsed_output["skill"]
-        .as_str()
-        .ok_or("no skill picked")?;
+    let picked = SkillName::parse(
+        pick.parsed_output["skill"]
+            .as_str()
+            .ok_or("no skill picked")?,
+    )?;
     println!("Picked: {picked}");
     let skill = found
         .skills
         .iter()
-        .find(|s| s.properties.name.as_str() == picked)
+        .find(|s| s.properties.name == picked)
         .ok_or("picked skill is not in the catalog")?;
 
     let instructions = activation(skill);

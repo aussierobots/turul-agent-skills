@@ -1,5 +1,4 @@
 use std::collections::BTreeMap;
-use std::fmt;
 
 use saphyr_parser::{Event, Parser, ScalarStyle, Span};
 
@@ -32,7 +31,7 @@ pub struct SkillProperties {
 
 impl SkillProperties {
     /// Properties with the two required fields and every optional field absent.
-    pub fn new(name: SkillName, description: impl Into<String>) -> Self {
+    pub(crate) fn new(name: SkillName, description: impl Into<String>) -> Self {
         SkillProperties {
             name,
             description: description.into(),
@@ -46,6 +45,7 @@ impl SkillProperties {
 
 /// A YAML value of the frontmatter subset. Every scalar is a string.
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum RawValue {
     /// A scalar. `typed` is true when it was written plain and a typed YAML
     /// parser would read it as null, a boolean or a number.
@@ -73,15 +73,20 @@ pub struct RawSkill {
 }
 
 /// Why a document could not be parsed.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
+#[non_exhaustive]
 pub enum ParseError {
     /// The first line is not `---`.
+    #[error("SKILL.md must start with YAML frontmatter (---)")]
     FrontmatterMissing,
     /// No closing `---` line.
+    #[error("SKILL.md frontmatter not properly closed with ---")]
     FrontmatterUnclosed,
     /// The frontmatter is not valid YAML for this format; the text says why.
+    #[error("Invalid YAML in frontmatter: {0}")]
     InvalidYaml(String),
     /// The frontmatter is not a mapping.
+    #[error("SKILL.md frontmatter must be a YAML mapping")]
     NotMapping,
 }
 
@@ -96,23 +101,6 @@ impl ParseError {
         }
     }
 }
-
-impl fmt::Display for ParseError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            ParseError::FrontmatterMissing => {
-                f.write_str("SKILL.md must start with YAML frontmatter (---)")
-            }
-            ParseError::FrontmatterUnclosed => {
-                f.write_str("SKILL.md frontmatter not properly closed with ---")
-            }
-            ParseError::InvalidYaml(detail) => write!(f, "Invalid YAML in frontmatter: {detail}"),
-            ParseError::NotMapping => f.write_str("SKILL.md frontmatter must be a YAML mapping"),
-        }
-    }
-}
-
-impl std::error::Error for ParseError {}
 
 /// Splits `content` into frontmatter entries and body. Purely syntactic: no
 /// field is required or checked here.

@@ -4,10 +4,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use tempfile::TempDir;
-use turul_agent_skills::{
-    MAX_RESOURCE_FILES, MAX_SCAN_DEPTH, Skill, SkillName, SkillProperties, activation, load,
-    to_prompt,
-};
+use turul_agent_skills::{MAX_RESOURCE_FILES, MAX_SCAN_DEPTH, Skill, activation, load, to_prompt};
 
 mod common;
 use common::{fixtures_dir, subdirectories};
@@ -36,10 +33,10 @@ fn root() -> (TempDir, PathBuf) {
 }
 
 fn bare_skill(name: &str, description: &str) -> Skill {
-    Skill::new(
-        SkillProperties::new(SkillName::parse(name).unwrap(), description),
-        "Body",
-    )
+    Skill::builder(name, description)
+        .body("Body")
+        .build()
+        .unwrap()
 }
 
 fn block(name: &str, description: &str, location: &str) -> String {
@@ -286,10 +283,12 @@ fn activation_name_attribute_is_the_skill_name() {
 #[test]
 fn activation_without_location_omits_directory_and_resources() {
     assert_eq!(
-        activation(&Skill::new(
-            bare_skill("my-skill", "d").properties,
-            "\n Body \n"
-        )),
+        activation(
+            &Skill::builder("my-skill", "d")
+                .body("\n Body \n")
+                .build()
+                .unwrap()
+        ),
         "<skill_content name=\"my-skill\">\nBody\n</skill_content>"
     );
 }

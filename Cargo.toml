@@ -19,6 +19,7 @@ rust-version = "1.94"
 turul-agent-skills = { path = "crates/turul-agent-skills", version = "0.1" }
 clap = { version = "4.6", features = ["derive"] }
 unicode-normalization = "0.1"
+thiserror = "2.0"
 unicode-properties = { version = "0.1", default-features = false, features = ["general-category"] }
 saphyr-parser = "0.3"
 
