@@ -190,6 +190,30 @@ goes into `rendered_prompt` and the choice is a schema `enum` of skill names. **
 gap, so no turul-llm handoff.** The offline stub implements `LlmClient` in the example, as
 `turul-llm-core`'s own tests do.
 
+### 2.6 Maintainer decisions
+
+The other ADRs cite these by label. Decided by the maintainer on 2026-11-06.
+
+| # | Decision | Recommendation / decision |
+|---|----------|----------------|
+| D1 | Starting version | `0.1.0`; patch bumps thereafter |
+| D2 | Licence | Dual `MIT OR Apache-2.0`: rename `LICENSE`→`LICENSE-APACHE`, add `LICENSE-MIT` |
+| D3 | `name` charset: spec prose "unicode lowercase alphanumeric characters (`a-z`, `0-9`)" vs skills-ref NFKC+Unicode `isalnum` | **Revised 2026-11-06: follow skills-ref** (NFKC, Unicode lowercase alphanumeric + hyphen). Was ASCII; reversed under the maintainer rule "if in doubt the reference sites resolve": the prose is ambiguous (says "unicode") and 5 of 21 `skills-ref` validator cases (`test_i18n_*`, `test_nfkc_normalization`) require Unicode. No divergence |
+| D4 | Dialects / unknown frontmatter keys | Spec is the only dialect modelled. Strict `validate`: unknown key = error. Lenient `load`: unknown top-level keys kept verbatim in opaque `extensions` (insertion order), one diagnostic per key; `render` writes them after spec fields. No typed vendor fields or per-dialect parsers, ever |
+| D5 | `skill.md` lowercase fallback | Accept on read (skills-ref parity); `render`/`write_to` always write `SKILL.md` |
+| D6 | `to_prompt` on empty list | Library returns `None` on empty; the CLI cannot reach the empty case (`to-prompt` requires a path, exit 2) — parity with skills-ref |
+| D7 | YAML backend | `saphyr-parser` 0.3, chosen in ADR-003; every scalar read as a string |
+| D8 | Crate count | 2 crates (lib + cli) — keeps `clap` out of the library |
+| D9 | A2A extras | turul-a2a migrates to the spec: `name` replaces `id` (an `_` id becomes `-` in `name`; `metadata.a2a-id` keeps the wire id and `SkillCard` uses it as `AgentSkill.id` when present, ADR-008); scalar extras → namespaced `metadata` string keys (`a2a-tags`…); JSON Schemas → `assets/*.schema.json` referenced from metadata. turul-a2a's `SkillCard` is built from `Skill` and still projects to proto `AgentSkill`; its `SkillCard::parse` is deleted there |
+| D10 | Discovery | **Build.** ADR-009: caller-supplied project/user roots; bounded scan; project beats user; every candidate through `load`; trust gating is the caller's concern. Sync `std::fs` |
+| D11 | LLM examples | One member `examples/skill-llm`, bins `catalog`, `author` and `smoke`, shared stub client |
+| D12 | CLI on unquoted `: ` values | `read-properties` / `to-prompt` fail like `skills-ref`; only the library's `load` repairs (ADR-003, ADR-007) |
+| D13 | Lenient names | `load` warns on length and directory mismatch but skips names that break identity rules (ADR-002, ADR-004) |
+| D14 | Construction | `SkillBuilder` (turul builder style) is the one public way to create a skill; `build` rejects an empty description (ADR-004) |
+| D15 | Errors | `thiserror` derives, `#[non_exhaustive]` enums, as in turul-a2a and turul-mcp-framework |
+| D16 | File size | Not capped; the caller bounds what it scans (ADR-004) |
+| D17 | CI | GitHub Actions: fmt, clippy, test, doc on stable; `cargo check` on MSRV 1.94 |
+
 ## 3. Consequences
 
 - `conformance.rs` is table-driven over `tests/fixtures/*/expected.json` (schema §2.2):
@@ -217,3 +241,4 @@ gap, so no turul-llm handoff.** The offline stub implements `LlmClient` in the e
 - 2026-11-06 — Accepted: `conformance.rs`, `dependency_direction.rs` green under `cargo test --workspace`; no alternative path remains (`single_owner.rs` green: one parser, `discover` through `load` only). Defaults marked pending maintainer review stay marked; reversing one is a revision, not a new path.
 - 2026-11-06 — Usage-text row: missing-path block is click-shaped, the rest is clap.
 - 2026-11-06 — Divergence row for the colon fallback restored at library level: `load` repairs, `validate` and the CLI match `skills-ref`.
+- 2026-11-06 — §2.6 holds the maintainer decision table (D1–D17), moved from the bootstrap plan, which is retired.

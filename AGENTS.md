@@ -2,7 +2,7 @@
 
 ## Current State
 
-- 0.1.0 implemented: `turul-agent-skills` (parse, validate, load, `SkillBuilder`, render, catalog, activation, discover, `prelude`) and `turul-agent-skills-cli` (binary `turul-skills`: `validate`, `read-properties`, `to-prompt`). Contract tests in `crates/*/tests/` (`conformance`, `skill_name`, `frontmatter`, `validate_and_load`, `builder`, `render`, `catalog_prompt`, `discovery`, `a2a_boundary`, `single_owner`, `dependency_direction`, `readme_snippets`, `cli`). The plan is `docs/TASKS.md`. CI: `.github/workflows/ci.yml`.
+- 0.1.0 implemented: `turul-agent-skills` (parse, validate, load, `SkillBuilder`, render, catalog, activation, discover, `prelude`) and `turul-agent-skills-cli` (binary `turul-skills`: `validate`, `read-properties`, `to-prompt`). Contract tests in `crates/*/tests/` (`conformance`, `skill_name`, `frontmatter`, `validate_and_load`, `builder`, `render`, `catalog_prompt`, `discovery`, `a2a_boundary`, `single_owner`, `dependency_direction`, `readme_snippets`, `cli`). Maintainer decisions: ADR-001 §2.6. CI: `.github/workflows/ci.yml`.
 - Target: the [Agent Skills specification](https://agentskills.io/specification) (Linux Foundation / AAIF), with the `skills-ref` reference implementation as conformance oracle.
 - Surface: the two crates above and `examples/skill-llm` (`cargo run -p skill-llm --bin catalog` / `--bin author` / `--bin smoke`; offline stub, `RUN_OLLAMA_SMOKE=1` for live Ollama) using [turul-llm](https://github.com/aussierobots/turul-llm).
 - Primary downstream consumer: [turul-a2a](https://github.com/aussierobots/turul-a2a), which will create and modify SKILL.md through this crate.

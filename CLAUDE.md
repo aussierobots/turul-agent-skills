@@ -11,7 +11,7 @@ Turul-agent-skills is a Rust implementation of the [Agent Skills](https://agents
 
 **This workspace owns the SKILL.md format.** Every other turul workspace that reads or writes SKILL.md (turul-a2a in particular) consumes this crate; none re-implements parsing, validation or rendering.
 
-**Current release**: see `CHANGELOG.md`. Bootstrap plan and post-bootstrap changes: `docs/TASKS.md`. CI (`.github/workflows/ci.yml`) runs fmt, clippy `-D warnings`, test and `cargo doc` with `RUSTDOCFLAGS=-D warnings` on stable, plus `cargo check` on the MSRV (1.94).
+**Current release**: see `CHANGELOG.md`. Maintainer decisions (D1–D17): ADR-001 §2.6. CI (`.github/workflows/ci.yml`) runs fmt, clippy `-D warnings`, test and `cargo doc` with `RUSTDOCFLAGS=-D warnings` on stable, plus `cargo check` on the MSRV (1.94).
 
 ## Build & Development Commands
 
