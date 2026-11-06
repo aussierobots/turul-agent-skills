@@ -2,7 +2,7 @@
 
 ## Current State
 
-- Bootstrap. No crates yet; the plan is `docs/TASKS.md`.
+- Bootstrap. Two stub crates (`turul-agent-skills`, `turul-agent-skills-cli`), no format logic yet; the plan is `docs/TASKS.md`.
 - Target: the [Agent Skills specification](https://agentskills.io/specification) (Linux Foundation / AAIF), with the `skills-ref` reference implementation as conformance oracle.
 - Planned surface: `turul-agent-skills` (library: parse, validate, load, render, catalog, discover), `turul-agent-skills-cli` (`skills-ref`-compatible binary), `examples/` using [turul-llm](https://github.com/aussierobots/turul-llm).
 - Primary downstream consumer: [turul-a2a](https://github.com/aussierobots/turul-a2a), which will create and modify SKILL.md through this crate.
@@ -17,6 +17,8 @@ In this order:
 4. Accepted and Proposed ADRs under `docs/adr/`.
 5. This file, then `CLAUDE.md`.
 6. Patterns from turul-a2a and turul-mcp-framework.
+
+When in doubt, the reference sites (1–3) resolve it — never local preference or memory. Fetch and cite them.
 
 If spec prose and `skills-ref` disagree, neither wins silently: the governing ADR records the decision and a test pins it.
 
