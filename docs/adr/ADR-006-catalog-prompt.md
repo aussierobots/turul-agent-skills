@@ -29,6 +29,7 @@ directory and a `<skill_resources>` list; "Listing bundled resources" says to li
 | Catalog | — | `to_prompt(&[Skill]) -> Option<String>` | `src/prompt.rs` |
 | Activation text | — | `activation(&Skill) -> String` | `src/prompt.rs` |
 | Escaping | private `escape_html(&str) -> String` (the five mappings above, `&` first) | used by both | `src/prompt.rs` |
+| Skipped directories | consumes `SKIPPED_DIRS` and `MAX_SCAN_DEPTH` from ADR-009; defines neither | used by `activation` | `src/prompt.rs` |
 | Resource cap | `pub const MAX_RESOURCE_FILES: usize = 100` | used by `activation` | `src/prompt.rs` |
 
 ### 2.2 Catalog bytes
@@ -123,3 +124,4 @@ Relative paths in this skill are relative to the skill directory.
 - 2026-11-06 — `activation_escapes_name_attribute` replaced by `activation_name_attribute_is_the_skill_name`: `SkillName` admits only letters, digits and hyphens, so the escape is unobservable.
 - 2026-11-06 — Accepted: `catalog_prompt.rs` green under `cargo test --workspace`; no alternative path remains (`single_owner.rs` green: one parser, `discover` through `load` only).
 - 2026-11-06 — Location-less skills are built with `SkillBuilder` (ADR-004); `Skill::new` is crate-private.
+- 2026-11-06 — The `.git`/`node_modules` skip list is the crate-private `SKIPPED_DIRS` owned by `discover.rs` (ADR-009); `prompt.rs` consumes it.

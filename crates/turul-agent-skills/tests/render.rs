@@ -15,13 +15,16 @@ fn skill(description: &str) -> Skill {
         .unwrap()
 }
 
-fn description_line(description: &str) -> String {
-    let rendered = skill(description).render();
+/// The rendered form of `value` as a metadata value (the builder trims descriptions).
+fn scalar_line(value: &str) -> String {
+    let mut skill = skill("d");
+    skill.properties.metadata.insert("k".into(), value.into());
+    let rendered = skill.render();
     let line = rendered
         .lines()
-        .nth(2)
+        .find(|line| line.starts_with("  k:"))
         .unwrap_or_else(|| panic!("{rendered:?}"));
-    line.strip_prefix("description:")
+    line.strip_prefix("  k:")
         .unwrap()
         .trim_start_matches(' ')
         .to_string()
@@ -189,7 +192,7 @@ fn render_quoting_table() {
         ("-", "'-'"),
     ];
     for (value, expected) in cases {
-        assert_eq!(&description_line(value), expected, "value {value:?}");
+        assert_eq!(&scalar_line(value), expected, "value {value:?}");
     }
 }
 

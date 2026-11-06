@@ -25,8 +25,9 @@ D10: build it; caller-supplied roots; bounded; project beats user; every candida
 |---|---|---|---|
 | Scope | `ScopeKind::{Project, User}`, `Scope { pub kind: ScopeKind, pub root: PathBuf }` | — | `src/discover.rs` |
 | Conventional roots | `Scope::conventional(kind: ScopeKind, base: &Path) -> Vec<Scope>` → `[base/.agents/skills, base/.claude/skills]` | optional helper; callers may build `Scope`s directly | `src/discover.rs` |
-| Result | `Discovered { skills: Vec<Skill>, diagnostics: Vec<Diagnostic> }`, `Diagnostic { path: PathBuf, error: ValidationError }` | `discover(scopes: &[Scope]) -> Discovered` | `src/discover.rs` |
+| Result | `Discovered { skills: Vec<Skill>, diagnostics: Vec<Diagnostic> }`, `Diagnostic { path: PathBuf, error: ValidationError }`; `ScopeKind`, `Discovered` and `Diagnostic` are `#[non_exhaustive]`, `Scope` stays exhaustive (callers build it by literal) | `discover(scopes: &[Scope]) -> Discovered` | `src/discover.rs` |
 | Bounds | `pub const MAX_SCAN_DEPTH: usize = 6`, `pub const MAX_SCAN_DIRS: usize = 2000` (per scope) | — | `src/discover.rs` |
+| Skipped directories | `pub(crate) const SKIPPED_DIRS: [&str; 2] = [".git", "node_modules"]`, consumed by `discover` and by `activation` (ADR-006) | — | `src/discover.rs` |
 | Collision key | `SkillName` (normalized) | — | ADR-002 |
 
 ### 2.2 Scan
@@ -121,3 +122,4 @@ output order. Same tree → same `Discovered`.
 - 2026-11-06 — Initial. Caller-supplied scopes; bounded depth-first scan; collision table; symlink containment.
 - 2026-11-06 — Test names added for unreadable root, skill-file symlink escape, overlapping scopes and message text.
 - 2026-11-06 — Accepted: `discovery.rs` green under `cargo test --workspace`; no alternative path remains (`single_owner.rs` green: one parser, `discover` through `load` only).
+- 2026-11-06 — `SKIPPED_DIRS` is the single owner of the skipped directory names (ADR-006 consumes it). `find_skill_md` now lives in `validate.rs` (ADR-004). `ScopeKind`, `Discovered`, `Diagnostic` are `#[non_exhaustive]`.

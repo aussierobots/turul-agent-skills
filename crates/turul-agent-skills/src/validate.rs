@@ -1,11 +1,10 @@
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use unicode_normalization::UnicodeNormalization;
 
 use crate::error::{ErrorCode, ValidationError, display_path};
-use crate::load::find_skill_md;
 use crate::name::{NameViolation, SkillName};
 use crate::parse::{ParseError, RawSkill, RawValue, SkillProperties, parse_skill_md};
 
@@ -17,6 +16,8 @@ const SPEC_FIELDS: [&str; 6] = [
     "metadata",
     "name",
 ];
+/// The message for a blank or non-string `description`.
+pub(crate) const DESCRIPTION_EMPTY_MESSAGE: &str = "Field 'description' must be a non-empty string";
 const MAX_NAME_CHARS: usize = 64;
 const MAX_DESCRIPTION_CHARS: usize = 1024;
 const MAX_COMPATIBILITY_CHARS: usize = 500;
@@ -32,11 +33,60 @@ pub(crate) struct Checked {
     pub extensions: Vec<(String, RawValue)>,
 }
 
-/// Checks `dir`, a skill directory, and returns every problem found.
-/// An empty list means the skill is valid.
+/// Checks the skill directory `dir` strictly and returns every problem found.
 ///
-/// Path and parse problems stop the check with a single error; otherwise all
-/// field errors are returned in a stable order.
+/// An empty list means the skill is valid. Path and parse problems stop the
+/// check with a single error; otherwise all field errors are returned in a
+/// stable order. Unlike [`load`](crate::load), nothing is tolerated: unknown
+/// keys, a name that differs from the directory name, over-long fields and
+/// YAML that only parses after repair are all errors.
+///
+/// # Errors
+///
+/// This function reports problems as a list of [`ValidationError`] rather than
+/// a `Result`. The codes it can report are:
+///
+/// - [`PathNotFound`](ErrorCode::PathNotFound),
+///   [`NotADirectory`](ErrorCode::NotADirectory),
+///   [`SkillMdMissing`](ErrorCode::SkillMdMissing) and
+///   [`ReadFailed`](ErrorCode::ReadFailed) for the path and file.
+/// - [`FrontmatterMissing`](ErrorCode::FrontmatterMissing),
+///   [`FrontmatterUnclosed`](ErrorCode::FrontmatterUnclosed),
+///   [`YamlInvalid`](ErrorCode::YamlInvalid) and
+///   [`FrontmatterNotMapping`](ErrorCode::FrontmatterNotMapping) for the
+///   frontmatter.
+/// - [`UnexpectedFields`](ErrorCode::UnexpectedFields) for keys outside the
+///   specification.
+/// - `Name*` codes ([`NameMissing`](ErrorCode::NameMissing),
+///   [`NameTooLong`](ErrorCode::NameTooLong),
+///   [`NameDirMismatch`](ErrorCode::NameDirMismatch) and the identity rules),
+///   `Description*`, `Compatibility*`, [`LicenseNotString`](ErrorCode::LicenseNotString),
+///   `Metadata*` and [`AllowedToolsNotString`](ErrorCode::AllowedToolsNotString)
+///   for the fields.
+///
+/// # Examples
+///
+/// ```
+/// use turul_agent_skills::{ErrorCode, validate};
+///
+/// let tmp = tempfile::tempdir()?;
+/// let dir = tmp.path().join("pdf-tools");
+/// std::fs::create_dir(&dir)?;
+/// std::fs::write(
+///     dir.join("SKILL.md"),
+///     "---\nname: pdf-tools\ndescription: Work with PDFs.\n---\nUse it.\n",
+/// )?;
+/// assert!(validate(&dir).is_empty());
+///
+/// // The name must match the directory.
+/// std::fs::write(
+///     dir.join("SKILL.md"),
+///     "---\nname: other\ndescription: Work with PDFs.\n---\n",
+/// )?;
+/// let errors = validate(&dir);
+/// assert_eq!(errors[0].code(), ErrorCode::NameDirMismatch);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
 pub fn validate(dir: &Path) -> Vec<ValidationError> {
     if !dir.exists() {
         return vec![ValidationError::new(
@@ -89,6 +139,14 @@ pub(crate) fn dir_name(dir: &Path) -> String {
         Some(Component::ParentDir) => "..".to_string(),
         _ => String::new(),
     }
+}
+
+/// `dir/SKILL.md` if it exists, else `dir/skill.md`.
+pub(crate) fn find_skill_md(dir: &Path) -> Option<PathBuf> {
+    ["SKILL.md", "skill.md"]
+        .into_iter()
+        .map(|name| dir.join(name))
+        .find(|path| path.exists())
 }
 
 /// Reads the skill file and splits it, mapping failures to errors.
@@ -217,7 +275,7 @@ fn check_description(
     let Some(description) = text(value).filter(|t| !t.trim().is_empty()) else {
         errors.push(error(
             ErrorCode::DescriptionEmpty,
-            "Field 'description' must be a non-empty string",
+            DESCRIPTION_EMPTY_MESSAGE,
         ));
         return None;
     };

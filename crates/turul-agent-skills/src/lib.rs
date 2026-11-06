@@ -13,7 +13,7 @@ mod render;
 mod skill;
 mod validate;
 
-pub use builder::SkillBuilder;
+pub use builder::{BuildError, SkillBuilder};
 pub use discover::{
     Diagnostic, Discovered, MAX_SCAN_DEPTH, MAX_SCAN_DIRS, Scope, ScopeKind, discover,
 };

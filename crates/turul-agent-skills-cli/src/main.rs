@@ -1,4 +1,38 @@
-//! Command line for Agent Skills (`SKILL.md`), compatible with `skills-ref`.
+//! `turul-skills`, a command line for Agent Skills (`SKILL.md`) that agrees with
+//! the `skills-ref` reference implementation.
+//!
+//! It is a thin wrapper over the [`turul_agent_skills`] library. Every
+//! `SKILL_PATH` is a skill directory or its `SKILL.md` file.
+//!
+//! # Commands
+//!
+//! - `turul-skills validate SKILL_PATH` checks a skill strictly. A valid skill
+//!   prints `Valid skill: <dir>` on standard output; otherwise each problem is
+//!   listed on standard error.
+//! - `turul-skills read-properties SKILL_PATH` prints the skill's
+//!   specification fields as JSON on standard output.
+//! - `turul-skills to-prompt SKILL_PATHS...` prints the `<available_skills>`
+//!   catalog for one or more skills, ready to place in a model prompt.
+//!
+//! # Exit codes
+//!
+//! - `0` on success.
+//! - `1` when a skill is invalid or cannot be loaded; the reason is on
+//!   standard error.
+//! - `2` when a path does not exist or the arguments are malformed.
+//!
+//! # Examples
+//!
+//! ```text
+//! $ turul-skills validate skills/pdf-tools
+//! Valid skill: skills/pdf-tools
+//!
+//! $ turul-skills read-properties skills/pdf-tools
+//! {
+//!   "name": "pdf-tools",
+//!   "description": "Work with PDFs."
+//! }
+//! ```
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -18,18 +52,28 @@ struct Cli {
 #[derive(Subcommand)]
 enum Command {
     /// Validate a skill directory
+    ///
+    /// Prints `Valid skill: <dir>` and exits 0 when every rule holds. Otherwise
+    /// lists each problem on standard error and exits 1.
     Validate {
         /// Skill directory or its SKILL.md
         #[arg(value_name = "SKILL_PATH")]
         path: PathBuf,
     },
     /// Print a skill's properties as JSON
+    ///
+    /// Prints name, description and any license, compatibility, allowed-tools
+    /// and metadata. Exits 1 with the reason on standard error when the skill
+    /// cannot be loaded.
     ReadProperties {
         /// Skill directory or its SKILL.md
         #[arg(value_name = "SKILL_PATH")]
         path: PathBuf,
     },
-    /// Print the <available_skills> catalog for skill directories
+    /// Print the `<available_skills>` catalog for skill directories
+    ///
+    /// Lists each skill's name, description and absolute SKILL.md location in
+    /// the order given. Exits 1 on the first skill that cannot be loaded.
     ToPrompt {
         /// Skill directories or their SKILL.md files
         #[arg(value_name = "SKILL_PATHS", required = true)]

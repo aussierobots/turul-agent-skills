@@ -74,7 +74,8 @@ match load(&dir) {
 
 ### Create and write a skill
 
-`SkillBuilder` parses the name, so a `Skill` always has a legal identity.
+`SkillBuilder` parses the name and trims the description, so a `Skill` always has a legal identity
+and a non-empty description. `build` returns `BuildError` otherwise.
 `write_to` creates `<parent>/<name>/SKILL.md`.
 
 ```rust
@@ -85,7 +86,7 @@ let skill = SkillBuilder::new("summarize", "Summarize a document in three bullet
     .license("MIT")
     .body("Read the document, then answer in three bullets.\n")
     .build()
-    .expect("a legal name");
+    .expect("a legal name and a non-empty description");
 
 let file = skill.write_to(parent.path())?;
 assert!(file.ends_with("summarize/SKILL.md"));
@@ -208,7 +209,7 @@ $ echo $?
 
 ## Examples with an LLM
 
-`examples/skill-llm` uses [turul-llm](https://github.com/aussierobots/turul-llm) to let a model
+[`examples/skill-llm`](https://github.com/aussierobots/turul-agent-skills/tree/main/examples/skill-llm) uses [turul-llm](https://github.com/aussierobots/turul-llm) to let a model
 pick a skill from the catalog and use it (`catalog`), and to draft, validate, write and modify
 a skill (`author`); `smoke` asserts every public capability step by step. They run offline against a stub model by default:
 

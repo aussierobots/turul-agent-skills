@@ -8,15 +8,20 @@ use crate::error::ErrorCode;
 /// The identity of a skill: trimmed, NFKC-normalized, and checked against the
 /// name rules of the Agent Skills specification.
 ///
-/// `SkillName::parse` is the only constructor, so two spellings of one name
-/// are always the same value.
+/// [`SkillName::parse`] is the only constructor, so two spellings of one name
+/// are always the same value. Length is not part of a name's identity;
+/// [`validate`](crate::validate) checks the 64-character limit.
+///
+/// # Examples
 ///
 /// ```
 /// use turul_agent_skills::SkillName;
 ///
-/// let name = SkillName::parse("  my-skill ").unwrap();
+/// let name = SkillName::parse("  my-skill ")?;
 /// assert_eq!(name.as_str(), "my-skill");
+/// assert_eq!(name.to_string(), "my-skill");
 /// assert!(SkillName::parse("My_Skill").is_err());
+/// # Ok::<(), turul_agent_skills::NameError>(())
 /// ```
 ///
 /// The field is private; a name cannot be built from a raw string.
@@ -34,7 +39,21 @@ use crate::error::ErrorCode;
 pub struct SkillName(String);
 
 /// One identity rule a candidate name broke.
+///
+/// Each variant maps to the [`ErrorCode`] of the same name, such as
+/// [`ErrorCode::NameNotLowercase`].
+///
+/// # Examples
+///
+/// ```
+/// use turul_agent_skills::{NameViolation, SkillName};
+///
+/// let error = SkillName::parse("--Bad").unwrap_err();
+/// assert!(error.violations.contains(&NameViolation::HyphenEdge));
+/// assert!(error.violations.contains(&NameViolation::NotLowercase));
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum NameViolation {
     /// Nothing is left after trimming.
     Empty,
@@ -48,9 +67,31 @@ pub enum NameViolation {
     InvalidChars,
 }
 
-/// Why a candidate name is not a [`SkillName`].
+/// Why a candidate name is not a [`SkillName`], with every rule it broke.
+///
+/// Its [`Display`](std::fmt::Display) text joins the messages of all
+/// violations with `; `.
+///
+/// # Examples
+///
+/// ```
+/// use turul_agent_skills::{NameViolation, SkillName};
+///
+/// let error = SkillName::parse("-Bad--name").unwrap_err();
+/// assert_eq!(error.normalized, "-Bad--name");
+/// assert_eq!(
+///     error.violations,
+///     [
+///         NameViolation::NotLowercase,
+///         NameViolation::HyphenEdge,
+///         NameViolation::ConsecutiveHyphens,
+///     ]
+/// );
+/// assert!(error.to_string().contains("cannot start or end with a hyphen"));
+/// ```
 #[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
 #[error("{}", self.message())]
+#[non_exhaustive]
 pub struct NameError {
     /// The trimmed, NFKC-normalized candidate.
     pub normalized: String,
@@ -98,7 +139,26 @@ impl NameError {
 }
 
 impl SkillName {
-    /// Trims, NFKC-normalizes and checks `input`.
+    /// Trims, NFKC-normalizes and checks `input` against the name rules.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`NameError`] listing every broken [`NameViolation`]: empty
+    /// after trimming, not lowercase, a hyphen at either end, two hyphens in
+    /// a row, or a character that is not a letter, digit or hyphen.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use turul_agent_skills::{NameViolation, SkillName};
+    ///
+    /// // Full-width letters normalize to ASCII, so both spellings are one name.
+    /// assert_eq!(SkillName::parse("ｐｄｆ")?, SkillName::parse("pdf")?);
+    ///
+    /// let error = SkillName::parse("   ").unwrap_err();
+    /// assert_eq!(error.violations, [NameViolation::Empty]);
+    /// # Ok::<(), turul_agent_skills::NameError>(())
+    /// ```
     pub fn parse(input: &str) -> Result<SkillName, NameError> {
         let normalized: String = input.trim().nfkc().collect();
         let mut violations = Vec::new();
@@ -129,6 +189,15 @@ impl SkillName {
     }
 
     /// The normalized name.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use turul_agent_skills::SkillName;
+    ///
+    /// assert_eq!(SkillName::parse(" ok ")?.as_str(), "ok");
+    /// # Ok::<(), turul_agent_skills::NameError>(())
+    /// ```
     pub fn as_str(&self) -> &str {
         &self.0
     }

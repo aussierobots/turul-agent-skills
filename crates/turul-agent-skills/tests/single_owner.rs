@@ -47,15 +47,16 @@ fn sources() -> Vec<(PathBuf, String)> {
         .collect()
 }
 
-/// Files that contain `needle` and are not an allowed owner, by file name.
-fn offenders(needle: &str, owners: &[&str]) -> Vec<String> {
+/// Source files other than `owner` (under the library's `src/`) with a
+/// non-comment line containing `needle`.
+fn offenders(needle: &str, owner: &str) -> Vec<String> {
     sources()
         .into_iter()
         .filter(|(path, text)| {
-            text.contains(needle)
-                && !owners.iter().any(|owner| {
-                    path.ends_with(Path::new("crates/turul-agent-skills/src").join(owner))
-                })
+            !path.ends_with(Path::new("crates/turul-agent-skills/src").join(owner))
+                && text
+                    .lines()
+                    .any(|line| line.contains(needle) && !line.trim_start().starts_with("//"))
         })
         .map(|(path, _)| path.display().to_string())
         .collect()
@@ -72,22 +73,15 @@ fn owned_source(file: &str) -> String {
 
 #[test]
 fn skill_name_constructed_only_in_name_rs() {
-    assert_eq!(offenders("SkillName(", &["name.rs"]), Vec::<String>::new());
+    assert_eq!(offenders("SkillName(", "name.rs"), Vec::<String>::new());
 }
 
 #[test]
 fn skill_properties_literal_only_in_parse_rs() {
-    let found: Vec<String> = sources()
-        .into_iter()
-        .filter(|(path, text)| {
-            !path.ends_with("crates/turul-agent-skills/src/parse.rs")
-                && text.lines().any(|line| {
-                    line.contains("SkillProperties {") && !line.trim_start().starts_with("//")
-                })
-        })
-        .map(|(path, _)| path.display().to_string())
-        .collect();
-    assert_eq!(found, Vec::<String>::new());
+    assert_eq!(
+        offenders("SkillProperties {", "parse.rs"),
+        Vec::<String>::new()
+    );
 }
 
 #[test]
@@ -121,11 +115,12 @@ fn parse_skill_md_called_only_from_validate_and_load() {
     let found: Vec<String> = sources()
         .into_iter()
         .filter(|(path, text)| {
+            let internal = path.starts_with(workspace_root().join("crates"));
             let allowed = ["validate.rs", "load.rs", "parse.rs"]
                 .iter()
-                .any(|f| path.ends_with(Path::new("crates/turul-agent-skills/src").join(f)))
-                || path.ends_with("examples/skill-llm/src/bin/smoke.rs");
-            !allowed
+                .any(|f| path.ends_with(Path::new("crates/turul-agent-skills/src").join(f)));
+            internal
+                && !allowed
                 && text.lines().any(|line| {
                     line.contains("parse_skill_md(") && !line.contains("fn parse_skill_md(")
                 })

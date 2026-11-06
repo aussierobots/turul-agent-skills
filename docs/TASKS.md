@@ -119,3 +119,12 @@ Offline stub by default; live Ollama opt-in via `OLLAMA_BASE_URL`/`OLLAMA_MODEL`
 - Owner: turul-a2a session. Goal: replace `crates/turul-a2a-patterns/src/manifest.rs::SkillCard::parse` with `turul_agent_skills::load` + `SkillCard: TryFrom<&Skill>` reading namespaced `metadata` keys and `assets/*.json` files per ADR-008; `SkillCard::to_agent_skill` unchanged; migrate every example `SKILL.md` to spec frontmatter (`name` = dir name, drop `id`); `_` ids → `-` for `name` with the original id in `metadata.a2a-id`, and `SkillCard` projects `a2a-id` (else `name`) to `AgentSkill.id`, per ADR-008 §2.2; delete `serde_yaml` from the a2a workspace.
 - Gates: `turul-skills validate` exits 0 on every a2a example skill; a2a tests and interop smoke green; `rg serde_yaml` empty; wire ids unchanged (interop clients and smoke tests untouched); a2a ADR revision log updated; patch bump + CHANGELOG by its owner.
 - Stop: any A2A field without an ADR-008 row, or any `id` that is not a valid `SkillName` after `_` → `-` → report back, do not invent a mapping; any need to change this crate's API → report, do not fork.
+
+## Post-bootstrap changes
+Landed after the bootstrap above; the task rows are unchanged (row T4b.3 describes the pre-builder `author` flow; `author` now builds through `SkillBuilder`).
+- `SkillBuilder` (`Skill::builder`) with `BuildError`; `Skill` construction goes through it.
+- Error types implement `std::error::Error` via `thiserror`; `ErrorCode` implements `Display`.
+- `prelude` module for glob import of the common types and functions.
+- `examples/skill-llm` `smoke` bin (every public capability, asserted step by step) and three vendored Apache-2.0 reference skills under `examples/skill-llm/skills/reference`.
+- GitHub Actions CI (`.github/workflows/ci.yml`): fmt, clippy, test, doc on stable; check on MSRV 1.94.
+- Library README quick start extended (builder, discover); root README snippets must equal them (`readme_snippets.rs`).

@@ -1,17 +1,36 @@
 use std::fs;
 use std::path::Path;
 
-use crate::discover::MAX_SCAN_DEPTH;
+use crate::discover::{MAX_SCAN_DEPTH, SKIPPED_DIRS};
 use crate::skill::Skill;
 
-/// Most resource files `activation` lists before truncating.
+/// Most resource files [`activation`] lists before truncating.
+///
+/// ```
+/// assert_eq!(turul_agent_skills::MAX_RESOURCE_FILES, 100);
+/// ```
 pub const MAX_RESOURCE_FILES: usize = 100;
 
 /// The `<available_skills>` catalog for a model, skills in input order, or
 /// `None` when there are none (an empty catalog is better omitted).
 ///
 /// Name and description are HTML-escaped; the location is not, so it stays a
-/// usable file path. A skill without a location gets no `<location>` element.
+/// usable file path. A skill without a [location](Skill::location) gets no
+/// `<location>` element.
+///
+/// # Examples
+///
+/// ```
+/// use turul_agent_skills::{Skill, to_prompt};
+///
+/// let skill = Skill::builder("summarize", "Summarize <any> document.").build()?;
+/// let catalog = to_prompt(&[skill]).unwrap();
+/// assert!(catalog.starts_with("<available_skills>\n<skill>"));
+/// assert!(catalog.contains("Summarize &lt;any&gt; document."));
+///
+/// assert_eq!(to_prompt(&[]), None);
+/// # Ok::<(), turul_agent_skills::BuildError>(())
+/// ```
 pub fn to_prompt(skills: &[Skill]) -> Option<String> {
     if skills.is_empty() {
         return None;
@@ -39,6 +58,32 @@ pub fn to_prompt(skills: &[Skill]) -> Option<String> {
 /// The text a client returns when a skill is activated: the trimmed body, the
 /// skill directory and a capped list of bundled files. Files are listed by
 /// name and never opened.
+///
+/// A skill without a [location](Skill::location) has no directory, so only the
+/// body is returned.
+///
+/// # Examples
+///
+/// ```
+/// use turul_agent_skills::{Skill, activation, load};
+///
+/// let skill = Skill::builder("summarize", "Summarize a document.")
+///     .body("Answer in three bullets.\n")
+///     .build()?;
+/// assert_eq!(
+///     activation(&skill),
+///     "<skill_content name=\"summarize\">\nAnswer in three bullets.\n</skill_content>",
+/// );
+///
+/// // A loaded skill also lists its bundled files.
+/// let tmp = tempfile::tempdir()?;
+/// let file = skill.write_to(tmp.path())?;
+/// let dir = file.parent().unwrap();
+/// std::fs::write(dir.join("notes.txt"), "extra")?;
+/// let loaded = load(dir)?.skill;
+/// assert!(activation(&loaded).contains("<file>notes.txt</file>"));
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
 pub fn activation(skill: &Skill) -> String {
     let mut out = format!(
         "<skill_content name=\"{}\">\n{}\n",
@@ -98,7 +143,7 @@ fn collect(dir: &Path, prefix: &str, depth: usize, skill_file: &Path, files: &mu
         let name = entry.file_name().to_string_lossy().into_owned();
         let relative = format!("{prefix}{name}");
         if kind.is_dir() {
-            let skipped = name == ".git" || name == "node_modules";
+            let skipped = SKIPPED_DIRS.contains(&name.as_str());
             if !skipped && depth < MAX_SCAN_DEPTH {
                 collect(
                     &entry.path(),

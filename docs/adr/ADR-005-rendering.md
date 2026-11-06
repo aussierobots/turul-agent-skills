@@ -114,7 +114,7 @@ directory. Equality is `Skill`'s `PartialEq` (properties, extensions, body; ADR-
 
 - Rendering a skill loaded from a hand-written file normalizes its frontmatter (order, quoting,
   comments dropped). The body is never touched.
-- A file written by `write_to` passes `validate` whenever the `Skill` satisfies ADR-004.
+- A file written by `write_to` passes `validate` whenever the `Skill` satisfies ADR-004. `SkillBuilder::build` guarantees a legal name and a trimmed, non-empty description; the length limits remain `validate` rules (`padded_description_is_trimmed_and_round_trips`).
 
 ## 5. Revision log
 
@@ -125,3 +125,4 @@ directory. Equality is `Skill`'s `PartialEq` (properties, extensions, body; ADR-
 - 2026-11-06 — Row 6 extended with the YAML 1.1 binary, underscore, base-60 and timestamp forms (`render_quoting_table`). Keys longer than 1024 characters render in explicit `? key` / `:` form so the output reloads (`render_round_trips_keys_longer_than_a_simple_key`).
 - 2026-11-06 — Accepted: `render.rs` green under `cargo test --workspace`; no alternative path remains (`single_owner.rs` green: one parser, `discover` through `load` only).
 - 2026-11-06 — Row 6: signed hex and octal (`-0x1f`, `+0o17`) and `_` in octal quote, matching YAML 1.1 `[-+]?0x…` (`render_quoting_table`).
+- 2026-11-06 — "`write_to` output passes `validate`" now holds for the description: `SkillBuilder::build` rejects an empty one and trims padding (ADR-004).

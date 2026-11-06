@@ -10,8 +10,25 @@ const MAX_NESTING: usize = 64;
 
 /// The fields the Agent Skills specification defines, as validated values.
 ///
-/// Fields outside the specification never live here; `load` keeps them as
-/// extensions on the [`Skill`](crate::Skill).
+/// Fields outside the specification never live here; [`load`](crate::load)
+/// keeps them as extensions on the [`Skill`](crate::Skill). It is reached
+/// through [`Skill::properties`](crate::Skill) and cannot be constructed
+/// outside the crate.
+///
+/// # Examples
+///
+/// ```
+/// use turul_agent_skills::Skill;
+///
+/// let skill = Skill::builder("pdf-tools", "Work with PDFs.")
+///     .license("MIT")
+///     .build()?;
+/// let properties = &skill.properties;
+/// assert_eq!(properties.name.as_str(), "pdf-tools");
+/// assert_eq!(properties.license.as_deref(), Some("MIT"));
+/// assert!(properties.compatibility.is_none());
+/// # Ok::<(), turul_agent_skills::BuildError>(())
+/// ```
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct SkillProperties {
@@ -44,6 +61,17 @@ impl SkillProperties {
 }
 
 /// A YAML value of the frontmatter subset. Every scalar is a string.
+///
+/// # Examples
+///
+/// ```
+/// use turul_agent_skills::{RawValue, parse_skill_md};
+///
+/// let raw = parse_skill_md("---\ntags:\n  - a\n  - b\n---\n")?;
+/// let RawValue::Seq(items) = &raw.entries[0].1 else { panic!("not a sequence") };
+/// assert_eq!(items.len(), 2);
+/// # Ok::<(), turul_agent_skills::ParseError>(())
+/// ```
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum RawValue {
@@ -62,7 +90,29 @@ pub enum RawValue {
 }
 
 /// A `SKILL.md` split into its top-level frontmatter entries and body.
+///
+/// Nothing is validated: any key may appear, in any order. Use
+/// [`load`](crate::load) or [`validate`](crate::validate) for checked skills.
+///
+/// # Examples
+///
+/// ```
+/// use turul_agent_skills::{RawValue, parse_skill_md};
+///
+/// let raw = parse_skill_md("---\nname: a\ndescription: d\n---\nBody.\n")?;
+/// assert_eq!(raw.entries[0].0, "name");
+/// assert_eq!(raw.body, "Body.\n");
+/// assert!(raw.repaired.is_none());
+///
+/// // A value with an unquoted `: ` is repaired, and the original error kept.
+/// let raw = parse_skill_md("---\ndescription: Use when: asked\n---\n")?;
+/// assert!(raw.repaired.is_some());
+/// let RawValue::Str { text, .. } = &raw.entries[0].1 else { panic!("not a scalar") };
+/// assert_eq!(text, "Use when: asked");
+/// # Ok::<(), turul_agent_skills::ParseError>(())
+/// ```
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct RawSkill {
     /// Every top-level key, in source order.
     pub entries: Vec<(String, RawValue)>,
@@ -73,6 +123,16 @@ pub struct RawSkill {
 }
 
 /// Why a document could not be parsed.
+///
+/// # Examples
+///
+/// ```
+/// use turul_agent_skills::{ErrorCode, ParseError, parse_skill_md};
+///
+/// let error = parse_skill_md("---\nname: a\n").unwrap_err();
+/// assert_eq!(error, ParseError::FrontmatterUnclosed);
+/// assert_eq!(error.code(), ErrorCode::FrontmatterUnclosed);
+/// ```
 #[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
 #[non_exhaustive]
 pub enum ParseError {
@@ -91,7 +151,16 @@ pub enum ParseError {
 }
 
 impl ParseError {
-    /// The stable problem kind.
+    /// The stable [`ErrorCode`] for this error.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use turul_agent_skills::{ErrorCode, ParseError};
+    ///
+    /// assert_eq!(ParseError::NotMapping.code(), ErrorCode::FrontmatterNotMapping);
+    /// assert_eq!(ParseError::InvalidYaml("x".into()).code(), ErrorCode::YamlInvalid);
+    /// ```
     pub fn code(&self) -> ErrorCode {
         match self {
             ParseError::FrontmatterMissing => ErrorCode::FrontmatterMissing,
@@ -102,8 +171,32 @@ impl ParseError {
     }
 }
 
-/// Splits `content` into frontmatter entries and body. Purely syntactic: no
-/// field is required or checked here.
+/// Splits `content` into frontmatter entries and body.
+///
+/// Purely syntactic: no field is required or checked here. YAML that fails to
+/// parse because a plain value contains `: ` is retried with such values
+/// quoted; [`RawSkill::repaired`] then holds the original error.
+///
+/// # Errors
+///
+/// - [`ParseError::FrontmatterMissing`] when the first line is not `---`.
+/// - [`ParseError::FrontmatterUnclosed`] when no closing `---` line follows.
+/// - [`ParseError::InvalidYaml`] when the YAML is invalid even after repair, or
+///   nests deeper than the parser allows.
+/// - [`ParseError::NotMapping`] when the YAML is not a mapping.
+///
+/// # Examples
+///
+/// ```
+/// use turul_agent_skills::{ParseError, parse_skill_md};
+///
+/// let raw = parse_skill_md("---\nname: a\n---\nBody.\n")?;
+/// assert_eq!(raw.entries.len(), 1);
+/// assert_eq!(raw.body, "Body.\n");
+///
+/// assert_eq!(parse_skill_md("Body only.").unwrap_err(), ParseError::FrontmatterMissing);
+/// # Ok::<(), ParseError>(())
+/// ```
 pub fn parse_skill_md(content: &str) -> Result<RawSkill, ParseError> {
     let (yaml, body) = split_frontmatter(content)?;
     let (entries, repaired) = match parse_yaml(yaml) {

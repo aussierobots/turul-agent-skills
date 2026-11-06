@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 
 use tempfile::TempDir;
-use turul_agent_skills::{NameViolation, Skill, SkillBuilder, load, validate};
+use turul_agent_skills::{BuildError, NameViolation, Skill, SkillBuilder, load, validate};
 
 #[test]
 fn minimal_build_has_required_fields_and_empty_rest() {
@@ -66,7 +66,9 @@ fn build_normalizes_the_name_through_skill_name() {
 
 #[test]
 fn invalid_name_is_a_name_error_with_violations() {
-    let error = SkillBuilder::new("-Bad", "d").build().unwrap_err();
+    let Err(BuildError::Name(error)) = SkillBuilder::new("-Bad", "d").build() else {
+        panic!("expected a name error");
+    };
     assert_eq!(
         error.violations,
         vec![NameViolation::NotLowercase, NameViolation::HyphenEdge]
@@ -84,6 +86,31 @@ fn built_skill_writes_validates_and_reloads_equal() {
         .body("Body\n")
         .build()
         .unwrap();
+    let file = skill.write_to(parent.path()).unwrap();
+    let dir = file.parent().unwrap();
+    assert!(validate(dir).is_empty());
+    assert_eq!(load(dir).unwrap().skill, skill);
+}
+
+#[test]
+fn blank_description_is_rejected_with_the_validation_message() {
+    for blank in ["", "  \t\n"] {
+        let error = SkillBuilder::new("my-skill", blank).build().unwrap_err();
+        assert!(matches!(error, BuildError::DescriptionEmpty));
+        assert_eq!(
+            error.to_string(),
+            "Field 'description' must be a non-empty string"
+        );
+    }
+}
+
+#[test]
+fn padded_description_is_trimmed_and_round_trips() {
+    let skill = SkillBuilder::new("my-skill", "  Does a thing.\n")
+        .build()
+        .unwrap();
+    assert_eq!(skill.properties.description, "Does a thing.");
+    let parent = TempDir::new().unwrap();
     let file = skill.write_to(parent.path()).unwrap();
     let dir = file.parent().unwrap();
     assert!(validate(dir).is_empty());

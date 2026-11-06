@@ -6,9 +6,26 @@ use crate::parse::{RawValue, reads_as_non_string};
 use crate::skill::Skill;
 
 impl Skill {
-    /// The canonical `SKILL.md` text: spec fields in specification order with
-    /// metadata keys sorted, then extensions in insertion order, then the body
-    /// byte for byte. Loading the text gives back an equal skill.
+    /// The canonical `SKILL.md` text of this skill.
+    ///
+    /// Spec fields come in specification order with metadata keys sorted, then
+    /// extensions in insertion order, then the body byte for byte. Loading the
+    /// text gives back an equal skill.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use turul_agent_skills::Skill;
+    ///
+    /// let skill = Skill::builder("summarize", "Summarize a document.")
+    ///     .body("Answer in three bullets.\n")
+    ///     .build()?;
+    /// assert_eq!(
+    ///     skill.render(),
+    ///     "---\nname: summarize\ndescription: Summarize a document.\n---\nAnswer in three bullets.\n",
+    /// );
+    /// # Ok::<(), turul_agent_skills::BuildError>(())
+    /// ```
     pub fn render(&self) -> String {
         let p = &self.properties;
         let mut out = String::from("---\n");
@@ -38,6 +55,27 @@ impl Skill {
 
     /// Writes [`render`](Skill::render) to `<parent>/<name>/SKILL.md`, creating
     /// directories, and returns the file path. Nothing else is written.
+    ///
+    /// # Errors
+    ///
+    /// Returns the [`io::Error`] from creating the directory or writing the
+    /// file, for example when `parent` is not writable or a file is in the way.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use turul_agent_skills::Skill;
+    ///
+    /// let tmp = tempfile::tempdir()?;
+    /// let skill = Skill::builder("summarize", "Summarize a document.").build()?;
+    /// let file = skill.write_to(tmp.path())?;
+    /// assert!(file.ends_with("summarize/SKILL.md"));
+    ///
+    /// // A regular file where the directory should go is an I/O error.
+    /// let blocked = tempfile::NamedTempFile::new()?;
+    /// assert!(skill.write_to(blocked.path()).is_err());
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
     pub fn write_to(&self, parent: &Path) -> io::Result<PathBuf> {
         let dir = parent.join(self.properties.name.as_str());
         fs::create_dir_all(&dir)?;

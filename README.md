@@ -50,7 +50,7 @@ let skill = SkillBuilder::new("summarize", "Summarize a document in three bullet
     .license("MIT")
     .body("Read the document, then answer in three bullets.\n")
     .build()
-    .expect("a legal name");
+    .expect("a legal name and a non-empty description");
 
 let file = skill.write_to(parent.path())?;
 assert!(file.ends_with("summarize/SKILL.md"));
@@ -100,7 +100,7 @@ and the [client implementation guide](https://agentskills.io/client-implementati
 and agrees with `skills-ref` 0.1: all 40 of its test cases run as this project's conformance
 suite, and the CLI's output is compared with `skills-ref` on every fixture. Where the two differ,
 the reason is recorded; see
-[differences from skills-ref](crates/turul-agent-skills/README.md#differences-from-skills-ref).
+[differences from skills-ref](crates/turul-agent-skills/README.md#spec-conformance-and-divergences).
 
 ## Project documentation
 

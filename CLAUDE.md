@@ -11,7 +11,7 @@ Turul-agent-skills is a Rust implementation of the [Agent Skills](https://agents
 
 **This workspace owns the SKILL.md format.** Every other turul workspace that reads or writes SKILL.md (turul-a2a in particular) consumes this crate; none re-implements parsing, validation or rendering.
 
-**Current release**: see `CHANGELOG.md`. Bootstrap plan: `docs/TASKS.md`.
+**Current release**: see `CHANGELOG.md`. Bootstrap plan and post-bootstrap changes: `docs/TASKS.md`. CI (`.github/workflows/ci.yml`) runs fmt, clippy `-D warnings`, test and `cargo doc` with `RUSTDOCFLAGS=-D warnings` on stable, plus `cargo check` on the MSRV (1.94).
 
 ## Build & Development Commands
 
@@ -25,9 +25,10 @@ cargo doc --no-deps --workspace
 cargo test -p turul-agent-skills           # Library: parse, validate, render, catalog
 cargo test -p turul-agent-skills-cli       # skills-ref-compatible CLI
 cargo test -p turul-agent-skills --test conformance   # skills-ref corpus; others: skill_name, frontmatter,
-#   validate_and_load, render, catalog_prompt, discovery, a2a_boundary, single_owner, dependency_direction
+#   validate_and_load, builder, render, catalog_prompt, discovery, a2a_boundary, single_owner,
+#   dependency_direction, readme_snippets
 cargo test -p turul-agent-skills-cli --test cli       # CLI output and exit codes
-cargo test --doc --workspace               # README quick-start snippets
+cargo test --doc --workspace               # README quick-start snippets (library README; root README copy checked by readme_snippets)
 cargo run -p turul-agent-skills-cli -- validate path/to/skill   # binary: turul-skills
 
 # Examples (offline stub LLM by default; live Ollama is opt-in)
@@ -70,9 +71,9 @@ Every publish crate carries `LICENSE-APACHE` and `LICENSE-MIT` symlinks to `../.
 
 ### Crate Structure
 
-- `turul-agent-skills` — library. `SkillName` (validated newtype, the only way to obtain a name), `SkillProperties` (frontmatter), `Skill` (properties + body + location), strict validation (spec, all errors), lenient loading (client guide, diagnostics), canonical rendering back to SKILL.md, `<available_skills>` catalog, bounded discovery over caller-supplied project/user roots (every candidate goes through the same loader). No LLM, network or async deps.
-- `turul-agent-skills-cli` — `skills-ref`-compatible binary `turul-skills`: `validate`, `read-properties`, `to-prompt`; exit codes 0/1.
-- `examples/` — runnable examples that use skills with an LLM via [turul-llm](https://github.com/aussierobots/turul-llm) (`turul-llm-core` + an adapter). Offline stub by default.
+- `turul-agent-skills` — library. `SkillName` (validated newtype, the only way to obtain a name), `SkillProperties` (frontmatter), `Skill` (properties + body + location), `SkillBuilder` (`Skill::builder`; the construction entrypoint for new skills, `BuildError` on an illegal name or empty description), error types derived with `thiserror`, a `prelude` module for glob import, strict validation (spec, all errors), lenient loading (client guide, diagnostics), canonical rendering back to SKILL.md, `<available_skills>` catalog, bounded discovery over caller-supplied project/user roots (every candidate goes through the same loader). No LLM, network or async deps.
+- `turul-agent-skills-cli` — `skills-ref`-compatible binary `turul-skills`: `validate`, `read-properties`, `to-prompt`; exit codes 0/1, 2 for a missing path or usage error.
+- `examples/skill-llm` — runnable examples (bins `catalog`, `author`, `smoke`) that use skills with an LLM via [turul-llm](https://github.com/aussierobots/turul-llm) (`turul-llm-core` + `turul-llm-ollama`). Offline stub by default; `RUN_OLLAMA_SMOKE=1` (and `OLLAMA_MODEL`) selects live Ollama. `skills/reference` holds three vendored Apache-2.0 skills from anthropics/skills.
 
 ### Dependency Direction (invariants)
 

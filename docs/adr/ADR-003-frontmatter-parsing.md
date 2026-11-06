@@ -36,7 +36,7 @@ suggests a fallback that quotes values containing colons and retries.
 
 | Artifact | Owning symbol | Entrypoint | File |
 |---|---|---|---|
-| Parsed document | `RawSkill { entries: Vec<(String, RawValue)>, body: String, repaired: Option<String> }` | `parse_skill_md(&str) -> Result<RawSkill, ParseError>` | `src/parse.rs` |
+| Parsed document | `RawSkill { entries: Vec<(String, RawValue)>, body: String, repaired: Option<String> }` (`#[non_exhaustive]`) | `parse_skill_md(&str) -> Result<RawSkill, ParseError>` | `src/parse.rs` |
 | YAML value model | `#[non_exhaustive] RawValue::{Str { text: String, typed: bool }, Seq(Vec<RawValue>), Map(Vec<(String, RawValue)>)}` | built by `parse_skill_md`; reaches a `Skill` only through `load` (ADR-004) | `src/parse.rs` |
 | Spec fields | `SkillProperties { name: SkillName, description, license, compatibility, metadata: BTreeMap<String, String>, allowed_tools }`, `#[non_exhaustive]`, plus crate-private `SkillProperties::new(SkillName, impl Into<String>)` | literal only in `src/parse.rs`; filled by the field check in ADR-004 | `src/parse.rs` |
 | Parse failures | `ParseError::{FrontmatterMissing, FrontmatterUnclosed, InvalidYaml(String), NotMapping}` (`#[non_exhaustive]`, implements `Error` via `thiserror`) with `code()` from the shared `ErrorCode` | returned by `parse_skill_md` | `src/parse.rs`, codes in `src/error.rs` |
@@ -163,3 +163,4 @@ collection (rule 3). Duplicate keys and non-scalar keys (rules 5, 6) are checked
 - 2026-11-06 — Accepted: `frontmatter.rs` green under `cargo test --workspace`; no alternative path remains (`single_owner.rs` green: one parser, `discover` through `load` only).
 - 2026-11-06 — Rule 15: nesting deeper than 64 levels is `yaml-invalid` (was implemented, now stated and tested).
 - 2026-11-06 — `RawValue` and `ParseError` are `#[non_exhaustive]`; `ParseError` messages come from `thiserror` attributes, text unchanged. `SkillProperties::new` is crate-private (construction goes through `SkillBuilder`, ADR-004).
+- 2026-11-06 — `RawSkill` is `#[non_exhaustive]`; only `parse_skill_md` builds it.

@@ -17,18 +17,24 @@ All notable changes to this project are documented here. The format follows
   `discover` over caller-supplied project and user directories.
 - `turul-agent-skills-cli`: the `turul-skills` binary with `validate`, `read-properties` and
   `to-prompt`, matching `skills-ref` output and exit codes.
-- `examples/skill-llm`: pick and activate a skill through an LLM, and draft, write and modify
-  a skill with one. Offline stub by default; `RUN_OLLAMA_SMOKE=1` uses a live Ollama model.
-- `SkillBuilder` (`Skill::builder`): the construction entrypoint for new skills.
-- Error types (`ParseError`, `ValidationError`, `NameError`, `LoadSkip`) implement
+- `examples/skill-llm`: pick and activate a skill through an LLM (`catalog`), draft, write and
+  modify a skill with one (`author`), and assert every public capability step by step (`smoke`).
+  Offline stub by default; `RUN_OLLAMA_SMOKE=1` uses a live Ollama model. Three vendored
+  Apache-2.0 reference skills from anthropics/skills live under `skills/reference`.
+- `SkillBuilder` (`Skill::builder`): the construction entrypoint for new skills. `build` trims the
+  description and returns `BuildError` (`Name`, `DescriptionEmpty`) for an illegal name or an empty
+  description; the 1024-character limit stays a `validate` rule.
+- Error types (`ParseError`, `ValidationError`, `NameError`, `BuildError`, `LoadSkip`) implement
   `std::error::Error` via `thiserror`; `ErrorCode` implements `Display`.
 - `prelude` module for glob import of the common types and functions.
-- `examples/skill-llm`: `smoke` binary exercising every public capability; three vendored
-  Apache-2.0 reference skills from anthropics/skills under `skills/reference`.
 - README quick start whose snippets compile as doctests.
 
 ### Compatibility
 
+- `NameViolation`, `NameError`, `BuildError`, `ScopeKind`, `Loaded`, `LoadSkip`, `Diagnostic`,
+  `Discovered` and `RawSkill` are `#[non_exhaustive]`: fields can be read, not built by literal.
+  `Scope` stays exhaustive.
+- `SKILL.md` file size is not capped; the caller bounds what it scans.
 - Follows the Agent Skills specification and agrees with `skills-ref` 0.1; all 40 of its test
   cases run as a conformance suite. Differences are listed in the README and recorded in
   ADR-001.

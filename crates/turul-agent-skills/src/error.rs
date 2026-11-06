@@ -3,6 +3,26 @@ use std::path::{Component, Path};
 macro_rules! error_codes {
     ($($(#[$doc:meta])* $variant:ident => $code:literal,)+) => {
         /// A stable, machine-readable problem kind.
+        ///
+        /// Every [`ValidationError`] carries one. The kebab-case text from
+        /// [`as_str`](ErrorCode::as_str) is the form to log, match on in
+        /// scripts, or compare in tests. The enum is `#[non_exhaustive]`, so a
+        /// `match` needs a wildcard arm.
+        ///
+        /// # Examples
+        ///
+        /// ```
+        /// use turul_agent_skills::ErrorCode;
+        ///
+        /// assert_eq!(ErrorCode::NameMissing.as_str(), "name-missing");
+        /// assert_eq!(ErrorCode::NameMissing.to_string(), "name-missing");
+        ///
+        /// let advice = match ErrorCode::NameTooLong {
+        ///     ErrorCode::NameTooLong => "shorten the name",
+        ///     _ => "see the message",
+        /// };
+        /// assert_eq!(advice, "shorten the name");
+        /// ```
         #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
         #[non_exhaustive]
         pub enum ErrorCode {
@@ -16,7 +36,15 @@ macro_rules! error_codes {
         }
 
         impl ErrorCode {
-            /// The stable kebab-case code.
+            /// The stable kebab-case code, such as `"name-missing"`.
+            ///
+            /// # Examples
+            ///
+            /// ```
+            /// use turul_agent_skills::ErrorCode;
+            ///
+            /// assert_eq!(ErrorCode::SkillMdMissing.as_str(), "skill-md-missing");
+            /// ```
             pub fn as_str(self) -> &'static str {
                 match self {
                     $(ErrorCode::$variant => $code,)+
@@ -95,7 +123,24 @@ error_codes! {
     ScanIo => "scan-io",
 }
 
-/// One problem found in a skill, with a stable code and a readable message.
+/// One problem found in a skill, with a stable [`ErrorCode`] and a readable message.
+///
+/// Its [`Display`](std::fmt::Display) text is the message. Values come from
+/// [`validate`](crate::validate), [`load`](crate::load) and
+/// [`discover`](crate::discover); they cannot be constructed outside the crate.
+///
+/// # Examples
+///
+/// ```
+/// use turul_agent_skills::{ErrorCode, validate};
+///
+/// let tmp = tempfile::tempdir()?;
+/// let errors = validate(tmp.path());
+/// assert_eq!(errors[0].code(), ErrorCode::SkillMdMissing);
+/// assert_eq!(errors[0].message(), "Missing required file: SKILL.md");
+/// assert_eq!(errors[0].to_string(), errors[0].message());
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
 #[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
 #[error("{message}")]
 pub struct ValidationError {
@@ -112,17 +157,49 @@ impl ValidationError {
     }
 
     /// The stable problem kind.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use turul_agent_skills::{ErrorCode, validate};
+    ///
+    /// let errors = validate(std::path::Path::new("no/such/dir"));
+    /// assert_eq!(errors[0].code(), ErrorCode::PathNotFound);
+    /// ```
     pub fn code(&self) -> ErrorCode {
         self.code
     }
 
     /// The human-readable text.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use turul_agent_skills::validate;
+    ///
+    /// let errors = validate(std::path::Path::new("no/such/dir"));
+    /// assert_eq!(errors[0].message(), "Path does not exist: no/such/dir");
+    /// ```
     pub fn message(&self) -> &str {
         &self.message
     }
 }
 
-/// Path text as Python `pathlib` prints it: `/`-joined, `.` components dropped, empty is `.`.
+/// Formats a path the way messages and the command line print it: `/`-joined,
+/// `.` components dropped, and an empty path as `.`.
+///
+/// This is the form used inside [`ValidationError`] messages, so tests and
+/// tools can reproduce them.
+///
+/// # Examples
+///
+/// ```
+/// use std::path::Path;
+/// use turul_agent_skills::display_path;
+///
+/// assert_eq!(display_path(Path::new("./skills/./pdf")), "skills/pdf");
+/// assert_eq!(display_path(Path::new("")), ".");
+/// ```
 pub fn display_path(path: &Path) -> String {
     let mut out = String::new();
     for component in path.components() {
