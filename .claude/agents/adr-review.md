@@ -66,9 +66,9 @@ No AI attribution in staged files or the pending commit message: `Co-Authored-By
 - A diff that changes behaviour an ADR governs also changes that ADR's tests and its revision log → **HIGH** if not.
 - A changed test is justified by the spec, `skills-ref` or the ADR, not by the implementation → **HIGH** if a test was loosened to match code.
 
-## 8. Spec pinning
+## 8. Source versions
 
-ADR-001 records the spec and client-guide URLs with fetch date and SHA-256, and the `skills-ref` commit SHA. A diff that changes fixtures or conformance behaviour without updating ADR-001's case or divergence tables → **HIGH**. Every divergence from `skills-ref` has an ADR row and a test.
+ADR-001 names the spec and client-guide URLs with the date read, and the `skills-ref` version. A commit SHA or file hash used as a pin anywhere → **HIGH** (versions only). A sibling-crate version with a patch component (`0.1.1`) in a Cargo.toml or doc → **MEDIUM** (major.minor only). A diff that changes fixtures or conformance behaviour without updating ADR-001's case or divergence tables → **HIGH**. Every divergence from `skills-ref` has an ADR row and a test.
 
 ## 9. Versioning and changelog
 

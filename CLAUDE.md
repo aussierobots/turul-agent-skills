@@ -34,6 +34,8 @@ RUN_OLLAMA_SMOKE=1 cargo run -p skill-llm --bin catalog
 
 **All crate dependencies MUST use `workspace = true`** — versions live in root `[workspace.dependencies]`, dev-dependencies included. Never put a version number in a crate's own `Cargo.toml`.
 
+**Versions, not SHAs.** Upstream sources (spec, `skills-ref`) and sibling crates (turul-llm, turul-a2a) are referenced by version, never by commit SHA or file hash. Sibling crates are major.minor only (`turul-llm-core = "0.1"`, not `0.1.1`); this workspace's own release number stays whole. `Cargo.lock` is git-ignored and gates nothing.
+
 **Parallel worktrees:** give each worktree its own `CARGO_TARGET_DIR`.
 
 ## Git Conventions
@@ -76,9 +78,9 @@ Every publish crate carries `LICENSE-APACHE` and `LICENSE-MIT` symlinks to `../.
 
 - Specification: https://agentskills.io/specification
 - Client implementation guide: https://agentskills.io/client-implementation/adding-skills-support
-- Reference implementation `skills-ref` (Python): `github.com/agentskills/agentskills/skills-ref`, pinned by commit SHA in ADR-001. Its test corpus is ported to fixtures and is the conformance suite.
+- Reference implementation `skills-ref` (Python): `github.com/agentskills/agentskills/skills-ref`, referenced by version (0.1) in ADR-001 — never by commit SHA. Its test corpus is ported to fixtures and is the conformance suite.
 
-Where spec prose and `skills-ref` behaviour differ (name character set, `skill.md` fallback, YAML typing, empty catalog), the governing ADR records the decision and a test pins it. Re-verify the pinned SHA before describing a release as spec-compliant.
+Where spec prose and `skills-ref` behaviour differ (name character set, `skill.md` fallback, YAML typing, empty catalog), the governing ADR records the decision and a test pins it. Re-check the live spec and the current `skills-ref` version before describing a release as spec-compliant.
 
 ### Architecture Decision Records
 

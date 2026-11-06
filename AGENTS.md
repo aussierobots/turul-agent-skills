@@ -13,7 +13,7 @@ In this order:
 
 1. The Agent Skills specification at `https://agentskills.io/specification`.
 2. The client implementation guide at `https://agentskills.io/client-implementation/adding-skills-support`.
-3. `skills-ref` at `github.com/agentskills/agentskills/skills-ref`, at the commit pinned in ADR-001.
+3. `skills-ref` at `github.com/agentskills/agentskills/skills-ref`, at the version named in ADR-001 (0.1).
 4. Accepted and Proposed ADRs under `docs/adr/`.
 5. This file, then `CLAUDE.md`.
 6. Patterns from turul-a2a and turul-mcp-framework.
@@ -51,7 +51,8 @@ If spec prose and `skills-ref` disagree, neither wins silently: the governing AD
 
 ### Version Hygiene
 
-- Pin the `skills-ref` commit SHA and the spec retrieval date in ADR-001. Re-verify before calling a release compliant.
+- Reference sources by version, never by commit SHA or file hash: `skills-ref` version and spec read date in ADR-001. Sibling crates (turul-llm, turul-a2a) are referenced as major.minor (`0.1`), never the patch.
+- `Cargo.lock` is git-ignored and gates nothing.
 - Patch bumps by default. Every behaviour or contract change bumps the version and updates `CHANGELOG.md` in the same commit.
 
 ## Architecture Guardrails
@@ -88,7 +89,7 @@ If spec prose and `skills-ref` disagree, neither wins silently: the governing AD
 
 ### Compliance Audit Gate
 
-Before describing a release as spec-compliant: pinned SHA re-verified against upstream `main`, corpus fixtures regenerated from it, and every divergence listed in an ADR with its test.
+Before describing a release as spec-compliant: live spec re-read and `skills-ref` version re-checked, corpus fixtures re-ported if it changed, and every divergence listed in an ADR with its test.
 
 ## Review Discipline
 
