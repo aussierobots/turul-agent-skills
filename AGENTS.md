@@ -85,7 +85,7 @@ If spec prose and `skills-ref` disagree, neither wins silently: the governing AD
 - Catalog: byte-exact output against `skills-ref to-prompt` fixtures, escaping, empty-set behaviour.
 - Discovery: routes through `load`, skip/cap rules, project-over-user collisions with diagnostics, deterministic order.
 - CLI: subcommands, output and exit codes match `skills-ref`.
-- README: every quick-start snippet compiles as a doctest.
+- README: the library README's snippets compile as doctests; the project README's Rust snippets must equal library snippets (`readme_snippets.rs`).
 
 ### Compliance Audit Gate
 
