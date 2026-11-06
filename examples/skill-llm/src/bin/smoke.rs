@@ -1,6 +1,6 @@
 //! Exercises every public capability of `turul-agent-skills` with one assertion
 //! per step: names, parsing, validation, loading, building, writing, the catalog
-//! prompt, activation, discovery and paths, then three steps that put a model in
+//! prompt, activation, discovery, paths and authoring advisories, then four steps that put a model in
 //! the loop. Prints `ok <step>` per step and exits 1 on the first failure.
 //!
 //! Offline stub by default; `RUN_OLLAMA_SMOKE=1` (or `OLLAMA_BASE_URL`, with
@@ -12,11 +12,11 @@ use std::error::Error;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use serde_json::json;
+use serde_json::{Value, json};
 use skill_llm::{Stub, client};
 use turul_agent_skills::prelude::*;
 use turul_agent_skills::{
-    ErrorCode, NameViolation, ParseError, ValidationError, display_path, parse_skill_md,
+    ErrorCode, NameViolation, ParseError, ValidationError, advise, display_path, parse_skill_md,
 };
 use turul_llm_core::{CompletionRequest, ExecutionHints, LlmClient};
 
@@ -295,6 +295,34 @@ fn display_path_is_pathlib_text() -> Step {
     Ok(())
 }
 
+fn advise_reports_length_and_nesting(tmp: &Path) -> Step {
+    let clean = load(&skills_root().join("greet-user"))?.skill;
+    ensure!(advise(&clean).is_empty());
+
+    let long = write_raw(
+        tmp,
+        "long-skill",
+        &format!(
+            "---\nname: long-skill\ndescription: d\n---\n{}",
+            "line\n".repeat(600)
+        ),
+    )?;
+    let found = codes(&advise(&load(&long)?.skill));
+    ensure!(found == [ErrorCode::SkillMdTooLong], "{found:?}");
+
+    let chain = write_raw(
+        tmp,
+        "chain-skill",
+        "---\nname: chain-skill\ndescription: d\n---\nSee [a](references/a.md).\n",
+    )?;
+    fs::create_dir_all(chain.join("references"))?;
+    fs::write(chain.join("references/a.md"), "Then `references/b.md`.\n")?;
+    fs::write(chain.join("references/b.md"), "End.\n")?;
+    let found = codes(&advise(&load(&chain)?.skill));
+    ensure!(found == [ErrorCode::NestedReference], "{found:?}");
+    Ok(())
+}
+
 fn hints() -> ExecutionHints {
     ExecutionHints::new().with_temperature(0.0)
 }
@@ -421,6 +449,94 @@ async fn llm_revises_the_description(llm: &dyn LlmClient, dir: &Path, tmp: &Path
     Ok(())
 }
 
+/// A fixed review the offline stub replays: one entry per rubric practice.
+fn stub_review() -> Value {
+    let ids = rubric_ids(&skills_root().join("skill-review")).expect("rubric readable");
+    let findings: serde_json::Map<String, Value> = ids
+        .into_iter()
+        .map(|id| {
+            let status = if id == "gotchas" { "improve" } else { "pass" };
+            (
+                id,
+                json!({"status": status, "evidence": "Greet a person by name in a chosen style."}),
+            )
+        })
+        .collect();
+    json!({"verdict": "needs-work", "findings": findings})
+}
+
+/// The practice ids of the `skill-review` rubric: its `## <id>` headings.
+fn rubric_ids(review_dir: &Path) -> Result<Vec<String>, Box<dyn Error>> {
+    let rubric = fs::read_to_string(review_dir.join("references/best-practices.md"))?;
+    Ok(rubric
+        .lines()
+        .filter_map(|line| line.strip_prefix("## "))
+        .map(str::to_string)
+        .collect())
+}
+
+async fn llm_reviews_a_skill(llm: &dyn LlmClient) -> Step {
+    let review_dir = skills_root().join("skill-review");
+    let reviewer = load(&review_dir)?.skill;
+    let target = load(&skills_root().join("greet-user"))?.skill;
+    let target_file = target.location().ok_or("target has no location")?;
+    let advisories: Vec<String> = advise(&target).iter().map(|a| a.to_string()).collect();
+    let ids = rubric_ids(&review_dir)?;
+    // The reviewer's instructions say to read the rubric when judging; a model
+    // without a file tool gets it from the host, as an agent would read it.
+    let rubric = fs::read_to_string(review_dir.join("references/best-practices.md"))?;
+    // One required entry per practice: the output is bounded and every finding
+    // is filed under the practice it judges.
+    let finding = json!({
+        "type": "object",
+        "properties": {
+            "status": {"type": "string", "enum": ["pass", "improve", "not-applicable"]},
+            "evidence": {"type": "string"}
+        },
+        "required": ["status", "evidence"]
+    });
+    let per_practice: serde_json::Map<String, Value> =
+        ids.iter().map(|id| (id.clone(), finding.clone())).collect();
+    let reply = llm
+        .complete(
+            CompletionRequest::new(format!(
+                "{}\n\nreferences/best-practices.md:\n{}\n\nSkill under review (SKILL.md):\n{}\n\nAdvisories:\n{}",
+                activation(&reviewer),
+                rubric,
+                fs::read_to_string(target_file)?,
+                if advisories.is_empty() {
+                    "none".to_string()
+                } else {
+                    advisories.join("\n")
+                }
+            ))
+            .with_execution_hints(hints())
+            .with_output_schema(json!({
+                "type": "object",
+                "properties": {
+                    "verdict": {"type": "string", "enum": ["good", "needs-work"]},
+                    "findings": {"type": "object", "properties": per_practice, "required": ids}
+                },
+                "required": ["verdict", "findings"]
+            })),
+        )
+        .await?;
+    let review = &reply.parsed_output;
+    let verdict = review["verdict"].as_str().ok_or("no verdict")?;
+    ensure!(["good", "needs-work"].contains(&verdict), "{verdict}");
+    for id in &ids {
+        let finding = &review["findings"][id];
+        let status = finding["status"].as_str().ok_or("no status")?;
+        ensure!(
+            ["pass", "improve", "not-applicable"].contains(&status),
+            "{id}: {status}"
+        );
+        let evidence = finding["evidence"].as_str().ok_or("no evidence")?;
+        ensure!(!evidence.trim().is_empty(), "{id}: empty evidence");
+    }
+    Ok(())
+}
+
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn Error>> {
     let temp = tempfile::tempdir()?;
@@ -442,6 +558,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     );
     report("discover-scopes", discover_ranks_and_reports_shadowing(tmp));
     report("display-path", display_path_is_pathlib_text());
+    report("advise", advise_reports_length_and_nesting(tmp));
 
     let (mode, llm) = client(Stub::new([
         json!({"skill": "greet-user"}),
@@ -453,6 +570,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         json!({
             "description": "Greet a named person in a chosen style. Use when the user asks for a greeting or a welcome message."
         }),
+        stub_review(),
     ]));
     println!("Mode: {mode}");
 
@@ -468,6 +586,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 "llm-revise-description",
                 llm_revises_the_description(llm.as_ref(), &dir, &out).await,
             );
+            report("llm-review-skill", llm_reviews_a_skill(llm.as_ref()).await);
         }
         Err(error) => report("llm-draft-write-validate", Err(error)),
     }

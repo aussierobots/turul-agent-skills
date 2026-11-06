@@ -121,6 +121,10 @@ error_codes! {
     SymlinkEscape => "symlink-escape",
     /// A directory could not be read.
     ScanIo => "scan-io",
+    /// The rendered `SKILL.md` is longer than the recommended line count (an advisory).
+    SkillMdTooLong => "skill-md-too-long",
+    /// A file the body references itself references another file in the skill (an advisory).
+    NestedReference => "nested-reference",
 }
 
 /// One problem found in a skill, with a stable [`ErrorCode`] and a readable message.

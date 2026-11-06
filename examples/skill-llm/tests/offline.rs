@@ -57,8 +57,10 @@ fn smoke_passes_every_step() {
     assert!(stdout.contains("Mode: offline-stub"), "{stdout}");
     assert_eq!(
         stdout.matches("\nok ").count() + stdout.starts_with("ok ") as usize,
-        16,
+        18,
         "{stdout}"
     );
+    assert!(stdout.contains("ok advise"), "{stdout}");
     assert!(stdout.contains("ok llm-revise-description"), "{stdout}");
+    assert!(stdout.contains("ok llm-review-skill"), "{stdout}");
 }

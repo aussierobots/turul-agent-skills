@@ -179,6 +179,8 @@ with diagnostics, skip = `LoadSkip`.
   `SkillBuilder`, writes it with `write_to`, then runs `validate` on that directory.
 - The CLI also rejects a document `load` repaired with the colon fallback (ADR-007); `load` itself keeps it.
 
+- Advisories (`advise`, ADR-010) are not diagnostics of `load` and never change `validate` output; they are a separate call over a loaded `Skill`.
+
 ## 5. Revision log
 
 - 2026-11-06 — Initial. 29 codes mapped to every `skills-ref` validator and parser message plus this crate's own checks; strict/lenient matrix; house fixtures.
@@ -192,3 +194,4 @@ with diagnostics, skip = `LoadSkip`.
 - 2026-11-06 — Accepted: `validate_and_load.rs`, `conformance.rs` green under `cargo test --workspace`; no alternative path remains (`single_owner.rs` green: one parser, `discover` through `load` only). Defaults marked pending maintainer review stay marked; reversing one is a revision, not a new path.
 - 2026-11-06 — `ValidationError` and `LoadSkip` implement `Error` (`thiserror`), `ErrorCode` implements `Display`; messages unchanged. `SkillBuilder` is the construction entrypoint for new skills; `Skill::new` and `SkillProperties::new` are crate-private. Tests `load_skip_displays_first_error`, `error_code_displays_its_stable_code`, `builder.rs`.
 - 2026-11-06 — `find_skill_md` moves to `validate.rs` beside `read_and_parse`, breaking the `validate`/`load` module cycle. `SkillBuilder::build` returns `BuildError { Name, DescriptionEmpty }`: it trims the description and rejects an empty one (spec: non-empty), reusing the `description-empty` message; length stays a `validate` rule. `Loaded` and `LoadSkip` are `#[non_exhaustive]`. `SKILL.md` file size recorded as uncapped (§3). Tests `builder.rs`.
+- 2026-11-06 — `ErrorCode` gains `skill-md-too-long` and `nested-reference`, produced only by `advise` (ADR-010); `validate` and `load` never emit them.

@@ -1,6 +1,7 @@
 #![doc = include_str!("../README.md")]
 #![deny(missing_docs)]
 
+mod advise;
 mod builder;
 mod discover;
 mod error;
@@ -13,6 +14,7 @@ mod render;
 mod skill;
 mod validate;
 
+pub use advise::{MAX_RECOMMENDED_LINES, advise};
 pub use builder::{BuildError, SkillBuilder};
 pub use discover::{
     Diagnostic, Discovered, MAX_SCAN_DEPTH, MAX_SCAN_DIRS, Scope, ScopeKind, discover,

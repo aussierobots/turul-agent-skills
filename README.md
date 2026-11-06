@@ -21,9 +21,9 @@ greet-user/
 
 | Crate | What it is |
 |---|---|
-| [`turul-agent-skills`](crates/turul-agent-skills) | Library: validate, load, create and modify skills, build the `<available_skills>` catalog, activate a skill, discover skills in a project. No async runtime, network or LLM dependency. |
+| [`turul-agent-skills`](crates/turul-agent-skills) | Library: validate, load, create and modify skills, build the `<available_skills>` catalog, activate a skill, discover skills in a project, report authoring advisories. No async runtime, network or LLM dependency. |
 | [`turul-agent-skills-cli`](crates/turul-agent-skills-cli) | The `turul-skills` binary: `validate`, `read-properties`, `to-prompt`, with `skills-ref` output and exit codes. |
-| [`examples/skill-llm`](examples/skill-llm) | Skills driving an LLM through [turul-llm](https://github.com/aussierobots/turul-llm): pick and activate a skill, or draft and write one. Runs offline by default. |
+| [`examples/skill-llm`](examples/skill-llm) | Skills driving an LLM through [turul-llm](https://github.com/aussierobots/turul-llm): pick and activate a skill, draft and write one, or review one against the best practices. Runs offline by default. |
 
 ## Quick start
 
@@ -88,7 +88,7 @@ turul-skills to-prompt path/to/a path/to/b   # <available_skills> block
 ```sh
 cargo run -p skill-llm --bin catalog     # the model picks a skill from the catalog, then uses it
 cargo run -p skill-llm --bin author      # the model drafts a skill; it is validated, written, modified
-cargo run -p skill-llm --bin smoke       # every public capability, one assertion per step
+cargo run -p skill-llm --bin smoke       # every public capability, one assertion per step, plus model steps that draft, revise and review a skill
 RUN_OLLAMA_SMOKE=1 cargo run -p skill-llm --bin catalog   # live Ollama instead of the offline stub
 RUN_OLLAMA_SMOKE=1 cargo run -p skill-llm --bin smoke
 ```

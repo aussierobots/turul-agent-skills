@@ -26,6 +26,12 @@ All notable changes to this project are documented here. The format follows
   description; the 1024-character limit stays a `validate` rule.
 - Error types (`ParseError`, `ValidationError`, `NameError`, `BuildError`, `LoadSkip`) implement
   `std::error::Error` via `thiserror`; `ErrorCode` implements `Display`.
+- `advise` and `MAX_RECOMMENDED_LINES`: authoring advisories for the two measurable specification
+  recommendations, reported as `ErrorCode::SkillMdTooLong` (more than 500 rendered lines) and
+  `ErrorCode::NestedReference` (a referenced file that references another file). Separate from
+  `validate` and `load`; judgment of quality is the `skill-review` example's job.
+- `examples/skill-llm`: the `skill-review` skill, a model of the best-practices page, and `smoke`
+  steps `advise` and `llm-review-skill`.
 - `prelude` module for glob import of the common types and functions.
 - README quick start whose snippets compile as doctests.
 

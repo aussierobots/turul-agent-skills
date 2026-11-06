@@ -136,6 +136,26 @@ assert_eq!(to_prompt(&[]), None);
 # Ok::<(), std::io::Error>(())
 ```
 
+### Authoring advisories
+
+`advise` reports the two measurable recommendations of the specification's progressive-disclosure
+guidance: a `SKILL.md` over 500 lines, and file references nested deeper than one level. It is
+separate from `validate` and `load`, which it never affects. Judging scope, gotchas or description
+quality is review work, not the library's.
+
+```rust
+use turul_agent_skills::{ErrorCode, Skill, advise};
+
+let long = Skill::builder("long", "A long skill.")
+    .body("line\n".repeat(600))
+    .build()
+    .expect("a legal name and a non-empty description");
+
+let advisories = advise(&long);
+assert_eq!(advisories[0].code(), ErrorCode::SkillMdTooLong);
+assert!(advisories[0].message().contains("500"));
+```
+
 ### Activation
 
 When the model asks for a skill, `activation` returns its instructions, its directory and the

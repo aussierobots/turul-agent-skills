@@ -213,6 +213,7 @@ The other ADRs cite these by label. Decided by the maintainer on 2026-11-06.
 | D15 | Errors | `thiserror` derives, `#[non_exhaustive]` enums, as in turul-a2a and turul-mcp-framework |
 | D16 | File size | Not capped; the caller bounds what it scans (ADR-004) |
 | D17 | CI | GitHub Actions: fmt, clippy, test, doc on stable; `cargo check` on MSRV 1.94 |
+| D18 | Best practices | `advise` reports the two measurable spec recommendations (ADR-010); judgment is the `skill-review` example's job |
 
 ## 3. Consequences
 
@@ -242,3 +243,4 @@ The other ADRs cite these by label. Decided by the maintainer on 2026-11-06.
 - 2026-11-06 — Usage-text row: missing-path block is click-shaped, the rest is clap.
 - 2026-11-06 — Divergence row for the colon fallback restored at library level: `load` repairs, `validate` and the CLI match `skills-ref`.
 - 2026-11-06 — §2.6 holds the maintainer decision table (D1–D17), moved from the bootstrap plan, which is retired.
+- 2026-11-06 — D18 added: best-practice guidance is advisory (`advise`, ADR-010), not validation.
