@@ -16,7 +16,14 @@ For each finding record severity, `file:line`, a quote, and a one-sentence fix. 
 
 # Checks
 
-## 1. Comment and docstring style
+## 1. Naming, comment and docstring style
+
+No file, directory, module, test, function, type or fixture is named after an ADR, task or phase → **BLOCKER**:
+
+```bash
+find crates examples -iregex '.*\(adr\|/t[0-9]+\)[-_]?[0-9].*' -not -path '*/target/*'
+grep -rnEi 'fn (adr|t[0-9]+_)[0-9]|mod adr[0-9]' crates/ examples/ --include='*.rs'
+```
 
 Code comments and rustdoc must not reference ADR numbers or sections, phase/slice/task ids (`T3.4`, `P2`), issue numbers, or review history.
 
@@ -28,7 +35,7 @@ Any hit in `.rs` → **BLOCKER**. ADR refs in `README.md`, `CHANGELOG.md`, `docs
 
 ## 2. Dependency direction
 
-- No publish crate (`crates/*/Cargo.toml`) has a normal or target-specific dependency starting with `turul-llm`, `turul-a2a`, `tokio`, or `reqwest` → **BLOCKER**. `tests/adr001_dep_direction.rs` enforces this; confirm it still exists and still lists those prefixes.
+- No publish crate (`crates/*/Cargo.toml`) has a normal or target-specific dependency starting with `turul-llm`, `turul-a2a`, `tokio`, or `reqwest` → **BLOCKER**. `tests/dependency_direction.rs` enforces this; confirm it still exists and still lists those prefixes.
 - `turul-llm-*` appears only in `[workspace.dependencies]` and `examples/*/Cargo.toml`.
 - `turul-agent-skills-cli` depends on `turul-agent-skills` and contains no format logic (no YAML parsing, name rules, escaping) of its own → **HIGH**.
 
@@ -62,7 +69,7 @@ No AI attribution in staged files or the pending commit message: `Co-Authored-By
 
 ## 7. Tests are the contract
 
-- Each ADR names its contract test file(s) `crates/<crate>/tests/adrNNN_*.rs`; each named file exists → **HIGH** if missing.
+- Each ADR names its contract test file(s) in `Implements:`; each named file exists → **HIGH** if missing.
 - A diff that changes behaviour an ADR governs also changes that ADR's tests and its revision log → **HIGH** if not.
 - A changed test is justified by the spec, `skills-ref` or the ADR, not by the implementation → **HIGH** if a test was loosened to match code.
 

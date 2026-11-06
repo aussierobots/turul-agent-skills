@@ -24,7 +24,7 @@ cargo doc --no-deps --workspace
 
 cargo test -p turul-agent-skills           # Library: parse, validate, render, catalog
 cargo test -p turul-agent-skills-cli       # skills-ref-compatible CLI
-cargo test -p turul-agent-skills --test adr002_skill_name   # One ADR's contract tests
+cargo test -p turul-agent-skills --test skill_name   # One ADR's contract tests
 
 # Examples (offline stub LLM by default; live Ollama is opt-in)
 cargo run -p skill-llm --bin catalog     # LLM picks a skill from the catalog, then uses it
@@ -84,7 +84,7 @@ Where spec prose and `skills-ref` behaviour differ (name character set, `skill.m
 
 ### Architecture Decision Records
 
-Long-form rationale lives under `docs/adr/`. Each ADR names the owning symbol and entrypoint for every key and derived artifact, and stays Proposed until every alternative path is deleted. Each ADR has a contract test file `crates/<crate>/tests/adrNNN_<slug>.rs`. A contract change updates the ADR revision log, its tests and `CHANGELOG.md` in the same slice.
+Long-form rationale lives under `docs/adr/`. Each ADR names the owning symbol and entrypoint for every key and derived artifact, and stays Proposed until every alternative path is deleted. Each ADR names its contract test file(s) in its `Implements:` line. Test files, modules and functions are named for the behaviour they test (`tests/skill_name.rs`), never after an ADR. A contract change updates the ADR revision log, its tests and `CHANGELOG.md` in the same slice.
 
 ADR refs belong in commit messages, PR descriptions, `CHANGELOG.md`, ADR cross-references and `README.md` files. **Not in code comments, docstrings or rustdoc.**
 
@@ -92,7 +92,9 @@ ADR refs belong in commit messages, PR descriptions, `CHANGELOG.md`, ADR cross-r
 
 Before committing any change touching `crates/`, `examples/`, `docs/adr/`, `CLAUDE.md`, `AGENTS.md`, `CHANGELOG.md` or the root `Cargo.toml`, dispatch the `adr-review` subagent (`.claude/agents/adr-review.md`). BLOCKERs and HIGHs are fixed before the commit lands.
 
-### Comment and Docstring Style
+### Naming, Comment and Docstring Style
+
+**Names say what a thing is.** No file, module, test, function, type or fixture is named after an ADR, task or phase (`adr001_corpus.rs`, `t3_4_test`). Name it for its behaviour (`tests/conformance.rs`). The ADR points at the code; the code never points at the ADR.
 
 Comments state the invariant, the contract, or the timeless "why". Never ADR numbers or sections, phase/slice/task labels, issue numbers or review history. Upstream spec citations (URL + field name) are fine when the comment would be incomplete without them.
 

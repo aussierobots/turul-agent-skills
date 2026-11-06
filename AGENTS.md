@@ -74,7 +74,7 @@ If spec prose and `skills-ref` disagree, neither wins silently: the governing AD
 ### Test-First
 
 - Tests come from the spec, the ported `skills-ref` corpus and the ADR, before implementation.
-- Each ADR has `crates/<crate>/tests/adrNNN_<slug>.rs`. Those tests are the executable contract.
+- Each ADR names its contract test file(s) in its `Implements:` line; those tests are the executable contract. Nothing in code (file, module, test, function, fixture) is named after an ADR: name it for what it is (`tests/skill_name.rs`).
 
 ### Required Test Layers
 
