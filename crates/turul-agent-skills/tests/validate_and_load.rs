@@ -5,7 +5,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use tempfile::TempDir;
-use turul_agent_skills::{ErrorCode, LoadSkip, Loaded, RawValue, ValidationError, load, validate};
+use turul_agent_skills::{
+    ErrorCode, LoadSkip, Loaded, RawValue, ValidationError, load, load_str, validate,
+};
 
 fn write_skill(root: &Path, dir: &str, content: &str) -> PathBuf {
     let path = root.join(dir);
@@ -591,4 +593,55 @@ fn load_skip_displays_first_error() {
 fn error_code_displays_its_stable_code() {
     assert_eq!(ErrorCode::PathNotFound.to_string(), "path-not-found");
     assert_eq!(ErrorCode::NameDirMismatch.to_string(), "name-dir-mismatch");
+}
+
+#[test]
+fn load_str_agrees_with_load_on_every_fixture() {
+    let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
+    let mut dirs = Vec::new();
+    for case in fs::read_dir(&fixtures).unwrap() {
+        let case = case.unwrap().path();
+        dirs.push(case.clone());
+        if case.is_dir() {
+            dirs.extend(fs::read_dir(&case).unwrap().map(|e| e.unwrap().path()));
+        }
+    }
+    let mut compared = 0;
+    for dir in dirs {
+        let Some(file) = ["SKILL.md", "skill.md"]
+            .iter()
+            .map(|name| dir.join(name))
+            .find(|file| file.is_file())
+        else {
+            continue;
+        };
+        let name = dir.file_name().unwrap().to_str().unwrap();
+        let from_text = load_str(name, &fs::read_to_string(&file).unwrap());
+        match (load(&dir), from_text) {
+            (Ok(disk), Ok(text)) => {
+                assert_eq!(disk.skill, text.skill, "{name}");
+                assert_eq!(disk.diagnostics, text.diagnostics, "{name}");
+                assert!(disk.skill.location().is_some(), "{name}");
+                assert!(text.skill.location().is_none(), "{name}");
+            }
+            (Err(disk), Err(text)) => assert_eq!(disk, text, "{name}"),
+            (disk, text) => panic!("{name}: load {disk:?} but load_str {text:?}"),
+        }
+        compared += 1;
+    }
+    assert!(compared >= 40, "compared only {compared} fixtures");
+}
+
+#[test]
+fn load_str_checks_name_against_the_given_dir_name() {
+    let text = doc("name: pdf-tools\ndescription: Work with PDFs.");
+    assert!(load_str("pdf-tools", &text).unwrap().diagnostics.is_empty());
+    let mismatch = load_str("other", &text).unwrap();
+    assert_eq!(codes(&mismatch.diagnostics), ["name-dir-mismatch"]);
+}
+
+#[test]
+fn load_str_reports_parse_errors_as_load() {
+    let skip = load_str("x", "no frontmatter").unwrap_err();
+    assert_eq!(skip.errors[0].code(), ErrorCode::FrontmatterMissing);
 }

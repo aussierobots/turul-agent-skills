@@ -24,17 +24,19 @@ This crate needs both, with one vocabulary of errors, one field check, and no se
 | Error vocabulary | `ErrorCode` (`#[non_exhaustive]`, `as_str()` = stable kebab code, `Display` = `as_str()`) | — | `src/error.rs` |
 | One problem | `ValidationError { code: ErrorCode, message: String }`; accessors `code()`, `message()`; implements `Error`, `Display` = message | built only inside the crate | `src/error.rs` |
 | Strict result | `Vec<ValidationError>` (empty = valid) | `validate(&Path) -> Vec<ValidationError>` | `src/validate.rs` |
-| Loaded skill | `Skill { pub properties: SkillProperties, extensions: Vec<(String, RawValue)>, pub body: String, location: Option<PathBuf> }`; `SkillBuilder::new(name, description)` with consuming setters `license`, `compatibility`, `allowed_tools`, `metadata(key, value)`, `body`, and `build() -> Result<Skill, BuildError>` (the name goes through `SkillName::parse`; the description is trimmed and an empty one is rejected; the 1024-character limit stays a `validate` rule); `Skill::builder` forwards to it; the crate-private `Skill::new` is used by the builder and `load`; `extensions() -> &[(String, RawValue)]`; `location() -> Option<&Path>` | `load` or `SkillBuilder::build` | `src/skill.rs`, `src/builder.rs` |
+| Loaded skill | `Skill { pub properties: SkillProperties, extensions: Vec<(String, RawValue)>, pub body: String, location: Option<PathBuf> }`; `SkillBuilder::new(name, description)` with consuming setters `license`, `compatibility`, `allowed_tools`, `metadata(key, value)`, `body`, and `build() -> Result<Skill, BuildError>` (the name goes through `SkillName::parse`; the description is trimmed and an empty one is rejected; the 1024-character limit stays a `validate` rule); `Skill::builder` forwards to it; the crate-private `Skill::new` is used by the builder and `load`; `extensions() -> &[(String, RawValue)]`; `location() -> Option<&Path>` | `load`, `load_str` or `SkillBuilder::build` | `src/skill.rs`, `src/builder.rs` |
 | Build failure | `BuildError` (`#[non_exhaustive]`, `thiserror`): `Name(#[from] NameError)`, `DescriptionEmpty` whose `Display` is the `description-empty` message owned by `validate.rs` (`DESCRIPTION_EMPTY_MESSAGE`) | returned by `SkillBuilder::build` | `src/builder.rs` |
-| Lenient result | `Loaded { skill: Skill, diagnostics: Vec<ValidationError> }` (`#[non_exhaustive]`), `LoadSkip { errors: Vec<ValidationError> }` (`#[non_exhaustive]`, so a skip with no errors cannot be built outside the crate; implements `Error`; `Display` = first error's message) | `load(&Path) -> Result<Loaded, LoadSkip>` | `src/load.rs` |
+| Lenient result | `Loaded { skill: Skill, diagnostics: Vec<ValidationError> }` (`#[non_exhaustive]`), `LoadSkip { errors: Vec<ValidationError> }` (`#[non_exhaustive]`, so a skip with no errors cannot be built outside the crate; implements `Error`; `Display` = first error's message) | `load(&Path) -> Result<Loaded, LoadSkip>`, `load_str(dir_name: &str, content: &str) -> Result<Loaded, LoadSkip>` | `src/load.rs` |
 | File lookup | crate-private `find_skill_md(&Path) -> Option<PathBuf>` | used by `validate`, `load`, `discover`; `validate.rs` no longer imports `load.rs`, so the two modules form no cycle | `src/validate.rs` |
-| Field check | private `check(&RawSkill, dir_name: &str) -> Checked` | used by `validate` and `load` only | `src/validate.rs` |
+| Field check | private `check(&RawSkill, dir_name: &str) -> Checked` | used by `validate`, `load` and `load_str` only | `src/validate.rs` |
 | Message path text | public `display_path(&Path) -> String` (the CLI prints the same path text): components joined by `/`, `.` components dropped, empty → `.` (Python `pathlib` `str()`) | used by every message with a path | `src/error.rs` |
 
 `validate` and `load` both run `find_skill_md` → read → `parse_skill_md` → `check`. They
-differ only in how they classify the same `ValidationError`s (§2.4). `Skill`'s `PartialEq`
+differ only in how they classify the same `ValidationError`s (§2.4). `load_str(dir_name, text)`
+is `load` for a skill embedded in a binary: `parse_skill_md` → `check(dir_name)` → the same
+private lenient step as `load`, with no file lookup and no `location`. `Skill`'s `PartialEq`
 compares `properties`, `extensions` and `body`; `location` is provenance, not content.
-`extensions` is private and read-only: only `load` fills it, from keys `parse_skill_md` found,
+`extensions` is private and read-only: only `load` and `load_str` fill it, from keys `parse_skill_md` found,
 so an extension key is never a spec field name or a duplicate (ADR-003 rule 5).
 
 `load` sets `location` to `canonicalize(dir)` joined with the file name found (absolute,
@@ -134,6 +136,9 @@ else `None` (`parser.py::find_skill_md`). Writes always produce `SKILL.md` (ADR-
 | A `SKILL.md` that is not UTF-8: `read-failed` from `validate` (stops, as a path error) and from `load` (skip) | `read_failed_on_non_utf8_skill_md` |
 | `location` is canonical and absolute | `load_location_is_canonical_absolute` |
 | No input panics `validate` or `load` | `validate_and_load_never_panic` |
+| `load_str` equals `load` on every fixture (skill, diagnostics, skip errors); its skill has no `location` | `load_str_agrees_with_load_on_every_fixture` |
+| `load_str` checks `name` against the given directory name | `load_str_checks_name_against_the_given_dir_name` |
+| `load_str` parse failure → skip with the parse code | `load_str_reports_parse_errors_as_load` |
 | Corpus: each ADR-001 case gives its expected codes and load outcome | `corpus_cases_match_expected` (`conformance.rs`) |
 
 ### 2.7 House fixtures
@@ -195,3 +200,5 @@ with diagnostics, skip = `LoadSkip`.
 - 2026-11-06 — `ValidationError` and `LoadSkip` implement `Error` (`thiserror`), `ErrorCode` implements `Display`; messages unchanged. `SkillBuilder` is the construction entrypoint for new skills; `Skill::new` and `SkillProperties::new` are crate-private. Tests `load_skip_displays_first_error`, `error_code_displays_its_stable_code`, `builder.rs`.
 - 2026-11-06 — `find_skill_md` moves to `validate.rs` beside `read_and_parse`, breaking the `validate`/`load` module cycle. `SkillBuilder::build` returns `BuildError { Name, DescriptionEmpty }`: it trims the description and rejects an empty one (spec: non-empty), reusing the `description-empty` message; length stays a `validate` rule. `Loaded` and `LoadSkip` are `#[non_exhaustive]`. `SKILL.md` file size recorded as uncapped (§3). Tests `builder.rs`.
 - 2026-11-06 — `ErrorCode` gains `skill-md-too-long` and `nested-reference`, produced only by `advise` (ADR-010); `validate` and `load` never emit them.
+- 2026-11-07 — `load_str(dir_name, content)` added for skills embedded with `include_str!` (turul-a2a, Lambda): `load`'s lenient step without file lookup; `location` is `None`. `load` and `load_str` share one private step. Tests `load_str_agrees_with_load_on_every_fixture`, `load_str_checks_name_against_the_given_dir_name`, `load_str_reports_parse_errors_as_load`.
+- 2026-11-07 — `parse_skill_md(` routing narrowed to `src/validate.rs`: `load` and `load_str` reach it through `read_and_parse`/`parse_text`. Test renamed `parse_skill_md_called_only_from_validate`.

@@ -94,7 +94,7 @@ is one test:
 | `SkillName(` appears only in `src/name.rs` (comment lines ignored) | `skill_name_constructed_only_in_name_rs` |
 | `SkillProperties {` literal appears only in `src/parse.rs` | `skill_properties_literal_only_in_parse_rs` |
 | `SkillProperties` declares exactly the spec fields `name, description, license, compatibility, metadata, allowed_tools` | `skill_properties_fields_are_spec_fields` |
-| `parse_skill_md(` is called only from `src/validate.rs` and `src/load.rs` within the crates' `src/` (internal routing; `parse_skill_md` stays public, and examples may call it) | `parse_skill_md_called_only_from_validate_and_load` |
+| `parse_skill_md(` is called only from `src/validate.rs` within the crates' `src/` (internal routing; `parse_skill_md` stays public, and examples may call it) | `parse_skill_md_called_only_from_validate` |
 | `src/discover.rs` obtains skills only through `load(` | `discover_calls_load_only` |
 
 ## 3. Alternatives considered
@@ -126,3 +126,4 @@ is one test:
 - 2026-11-06 — `NameError` implements `Error` and `Display` (`thiserror`); rule codes and message text have one owner in `name.rs`, `validate.rs` consumes them. Test `name_error_displays_every_violation_message`.
 - 2026-11-06 — `parse_skill_md_called_only_from_validate_and_load` is scoped to the crates' `src/`; the allowance for the `smoke` example is deleted (the rule is internal routing; `parse_skill_md` stays public). The `SkillName(` check ignores comment lines like the `SkillProperties` check.
 - 2026-11-06 — `NameViolation` and `NameError` are `#[non_exhaustive]`; `BuildError::Name` wraps `NameError` (ADR-004).
+- 2026-11-07 — `parse_skill_md(` routing narrowed to `src/validate.rs` (`load.rs` reaches it through `read_and_parse` and `parse_text`); test renamed `parse_skill_md_called_only_from_validate`.

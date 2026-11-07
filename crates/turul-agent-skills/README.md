@@ -72,6 +72,9 @@ match load(&dir) {
 # Ok::<(), std::io::Error>(())
 ```
 
+A skill embedded in a binary (`include_str!`) loads with `load_str(dir_name, text)`: the same
+rules, with `dir_name` standing in for the directory and no `location`.
+
 ### Create and write a skill
 
 `SkillBuilder` parses the name and trims the description, so a `Skill` always has a legal identity

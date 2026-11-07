@@ -1,8 +1,9 @@
 use std::path::Path;
 
 use crate::error::{ErrorCode, ValidationError, display_path};
+use crate::parse::RawSkill;
 use crate::skill::Skill;
-use crate::validate::{check, dir_name, find_skill_md, read_and_parse};
+use crate::validate::{check, dir_name, find_skill_md, parse_text, read_and_parse};
 
 /// A skill that loaded, with the problems that did not stop it.
 ///
@@ -123,8 +124,48 @@ pub fn load(dir: &Path) -> Result<Loaded, LoadSkip> {
         )));
     };
     let raw = read_and_parse(&file).map_err(skip)?;
+    let mut loaded = finish(raw, &dir_name(dir))?;
+    loaded.skill.location = dir
+        .canonicalize()
+        .ok()
+        .and_then(|canonical| file.file_name().map(|name| canonical.join(name)));
+    Ok(loaded)
+}
 
-    let checked = check(&raw, &dir_name(dir));
+/// Loads a skill from `SKILL.md` text leniently, for skills embedded in a binary.
+///
+/// The rules and errors are those of [`load`]; `dir_name` stands in for the
+/// skill's directory name, which the spec requires `name` to match. The skill
+/// has no [`Skill::location`], so bundled files cannot be resolved through it.
+///
+/// # Errors
+///
+/// Returns a [`LoadSkip`] as [`load`] does, except that the file errors
+/// [`SkillMdMissing`](ErrorCode::SkillMdMissing) and
+/// [`ReadFailed`](ErrorCode::ReadFailed) cannot occur.
+///
+/// # Examples
+///
+/// ```
+/// use turul_agent_skills::load_str;
+///
+/// const SKILL_MD: &str = "---\nname: pdf-tools\ndescription: Work with PDFs.\n---\nUse it.\n";
+///
+/// let loaded = load_str("pdf-tools", SKILL_MD)?;
+/// assert!(loaded.diagnostics.is_empty());
+/// assert!(loaded.skill.location().is_none());
+/// # Ok::<(), turul_agent_skills::LoadSkip>(())
+/// ```
+pub fn load_str(dir_name: &str, content: &str) -> Result<Loaded, LoadSkip> {
+    let raw = parse_text(content).map_err(|error| LoadSkip {
+        errors: vec![error],
+    })?;
+    finish(raw, dir_name)
+}
+
+/// The lenient checks shared by [`load`] and [`load_str`]; the skill has no location.
+fn finish(raw: RawSkill, dir_name: &str) -> Result<Loaded, LoadSkip> {
+    let checked = check(&raw, dir_name);
     let mut diagnostics = Vec::new();
     if let Some(detail) = &raw.repaired {
         diagnostics.push(ValidationError::new(
@@ -145,13 +186,8 @@ pub fn load(dir: &Path) -> Result<Loaded, LoadSkip> {
         errors.sort_by_key(|e| skip_rank(e.code()));
         return Err(LoadSkip { errors });
     };
-    let location = dir
-        .canonicalize()
-        .ok()
-        .and_then(|canonical| file.file_name().map(|name| canonical.join(name)));
     let mut skill = Skill::new(properties, raw.body);
     skill.extensions = checked.extensions;
-    skill.location = location;
     Ok(Loaded { skill, diagnostics })
 }
 

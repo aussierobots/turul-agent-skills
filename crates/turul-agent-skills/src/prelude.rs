@@ -1,7 +1,7 @@
 //! The types and functions most programs need, for one glob import.
 //!
 //! It re-exports [`Scope`], [`ScopeKind`], [`Skill`], [`SkillBuilder`],
-//! [`SkillName`], [`activation`], [`discover`], [`load`], [`to_prompt`] and
+//! [`SkillName`], [`activation`], [`discover`], [`load`], [`load_str`], [`to_prompt`] and
 //! [`validate`]. Error and diagnostic types are named through the crate root.
 //!
 //! # Examples
@@ -16,6 +16,6 @@
 //! ```
 
 pub use crate::{
-    Scope, ScopeKind, Skill, SkillBuilder, SkillName, activation, discover, load, to_prompt,
-    validate,
+    Scope, ScopeKind, Skill, SkillBuilder, SkillName, activation, discover, load, load_str,
+    to_prompt, validate,
 };

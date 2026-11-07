@@ -111,12 +111,12 @@ fn skill_properties_fields_are_spec_fields() {
 }
 
 #[test]
-fn parse_skill_md_called_only_from_validate_and_load() {
+fn parse_skill_md_called_only_from_validate() {
     let found: Vec<String> = sources()
         .into_iter()
         .filter(|(path, text)| {
             let internal = path.starts_with(workspace_root().join("crates"));
-            let allowed = ["validate.rs", "load.rs", "parse.rs"]
+            let allowed = ["validate.rs", "parse.rs"]
                 .iter()
                 .any(|f| path.ends_with(Path::new("crates/turul-agent-skills/src").join(f)));
             internal

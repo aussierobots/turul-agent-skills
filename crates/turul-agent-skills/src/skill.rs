@@ -63,7 +63,7 @@ impl Skill {
 
     /// Frontmatter keys outside the specification, in source order.
     ///
-    /// Only [`load`](crate::load) fills them; outside the crate they are
+    /// Only [`load`](crate::load) and [`load_str`](crate::load_str) fill them; outside the crate they are
     /// read-only. A skill that was built has none.
     ///
     /// # Examples
@@ -92,7 +92,8 @@ impl Skill {
     }
 
     /// The absolute, canonical path of the `SKILL.md` this skill was loaded
-    /// from, or `None` for a skill that was built.
+    /// from, or `None` for a skill that was built or loaded from text with
+    /// [`load_str`](crate::load_str).
     ///
     /// # Examples
     ///

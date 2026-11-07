@@ -29,9 +29,9 @@ D9: turul-a2a moves to the spec. This crate stays A2A-free (ADR-001 §deps).
 
 | Artifact | Owner | Entrypoint |
 |---|---|---|
-| `SKILL.md` parse, validation, load | this crate | `turul_agent_skills::load` / `validate` |
+| `SKILL.md` parse, validation, load | this crate | `turul_agent_skills::load` / `validate`; `load_str` for a skill embedded in a binary |
 | `SkillCard` and its projection to `AgentSkill` | turul-a2a | `SkillCard: TryFrom<&Skill>`, `SkillCard::to_agent_skill` (unchanged) |
-| `a2a-*` metadata keys and `assets/*.json` contents | turul-a2a | read through `Skill.properties.metadata` and the skill directory |
+| `a2a-*` metadata keys and `assets/*.json` contents | turul-a2a | read through `Skill.properties.metadata` and the skill directory (`Skill::location`), or for an embedded skill through an a2a-supplied asset reader keyed by the same relative path |
 
 This crate's public API names no A2A type, key or concept.
 
@@ -134,3 +134,4 @@ strictyaml 1.7.3 parses the frontmatter (probe, as in ADR-003) to the expected s
 - 2026-11-06 — Default pending maintainer review: non-`SkillName` ids map to the hyphenated `name` plus `metadata.a2a-id` holding the wire id; `SkillCard` uses `a2a-id` as `AgentSkill.id` when present. Wire ids and their callers are unchanged; the rename alternative is rejected, the `a2a-id` alternative adopted.
 - 2026-11-06 — Re-checked at release: stays Proposed, turul-a2a still defines `SkillCard::parse`; `a2a_boundary.rs` green.
 - 2026-11-06 — `id` row aligned with the `a2a-id` rule below it (`AgentSkill.id` = `a2a-id` when present).
+- 2026-11-07 — Embedded skills: turul-a2a loads `include_str!` manifests with `load_str`; asset files of an embedded skill are read through an a2a-owned reader keyed by the `assets/` relative path; `TryFrom<&Skill>` stays the disk-backed form. No new field mapping.

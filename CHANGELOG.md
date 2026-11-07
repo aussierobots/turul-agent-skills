@@ -5,12 +5,6 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
-### Added
-
-- `examples/skill-llm`: `OLLAMA_NUM_CTX` sets the Ollama context window through
-  `OllamaClient::with_num_ctx`, so the example needs a turul-llm 0.1 release that has it.
-  Thinking models such as `gemma4` need `16384`; Ollama may default to 4096.
-
 ## [0.1.0]
 
 ### Added
@@ -38,6 +32,11 @@ All notable changes to this project are documented here. The format follows
   `validate` and `load`; judgment of quality is the `skill-review` example's job.
 - `examples/skill-llm`: the `skill-review` skill, a model of the best-practices page, and `smoke`
   steps `advise` and `llm-review-skill`.
+- `load_str`: lenient loading from `SKILL.md` text, for skills embedded in a binary; the same
+  rules as `load`, with the caller's directory name and no location.
+- `examples/skill-llm`: `OLLAMA_NUM_CTX` sets the Ollama context window through
+  `OllamaClient::with_num_ctx`, so the example needs a turul-llm 0.1 release that has it.
+  Thinking models such as `gemma4` need `16384`; Ollama may default to 4096.
 - `prelude` module for glob import of the common types and functions.
 - README quick start whose snippets compile as doctests.
 

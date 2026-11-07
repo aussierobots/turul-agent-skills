@@ -157,7 +157,12 @@ pub(crate) fn read_and_parse(file: &Path) -> Result<RawSkill, ValidationError> {
             format!("Failed to read {}: {error}", display_path(file)),
         )
     })?;
-    parse_skill_md(&content).map_err(|error| ValidationError::new(error.code(), error.to_string()))
+    parse_text(&content)
+}
+
+/// Parses `SKILL.md` text, reporting a parse failure as a validation error.
+pub(crate) fn parse_text(content: &str) -> Result<RawSkill, ValidationError> {
+    parse_skill_md(content).map_err(|error| ValidationError::new(error.code(), error.to_string()))
 }
 
 fn entry<'a>(raw: &'a RawSkill, key: &str) -> Option<&'a RawValue> {

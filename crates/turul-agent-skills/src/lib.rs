@@ -20,7 +20,7 @@ pub use discover::{
     Diagnostic, Discovered, MAX_SCAN_DEPTH, MAX_SCAN_DIRS, Scope, ScopeKind, discover,
 };
 pub use error::{ErrorCode, ValidationError, display_path};
-pub use load::{LoadSkip, Loaded, load};
+pub use load::{LoadSkip, Loaded, load, load_str};
 pub use name::{NameError, NameViolation, SkillName};
 pub use parse::{ParseError, RawSkill, RawValue, SkillProperties, parse_skill_md};
 pub use prompt::{MAX_RESOURCE_FILES, activation, to_prompt};
