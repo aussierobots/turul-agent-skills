@@ -2,6 +2,13 @@
 name = "turul-agent-skills"
 description = "Parse, validate, render and catalog Agent Skills (SKILL.md) directories"
 readme = "README.md"
+# Tests that read the rest of the workspace (root README, examples, every crate) are not published.
+exclude = [
+    "tests/dependency_direction.rs",
+    "tests/example_skills.rs",
+    "tests/readme_snippets.rs",
+    "tests/single_owner.rs",
+]
 version.workspace = true
 edition.workspace = true
 authors.workspace = true

@@ -26,7 +26,7 @@ cargo test -p turul-agent-skills           # Library: parse, validate, render, c
 cargo test -p turul-agent-skills-cli       # skills-ref-compatible CLI
 cargo test -p turul-agent-skills --test conformance   # skills-ref corpus; others: skill_name, frontmatter,
 #   validate_and_load, builder, render, catalog_prompt, discovery, a2a_boundary, single_owner,
-#   dependency_direction, readme_snippets, advise
+#   dependency_direction, readme_snippets, advise, example_skills
 cargo test -p turul-agent-skills-cli --test cli       # CLI output and exit codes
 cargo test --doc --workspace               # README quick-start snippets (library README; root README copy checked by readme_snippets)
 cargo run -p turul-agent-skills-cli -- validate path/to/skill   # binary: turul-skills
@@ -61,7 +61,7 @@ Publishing is irreversible. Never run `cargo publish` without explicit instructi
 
 1. Bump `[workspace.package].version` and the matching `version` on intra-workspace `[workspace.dependencies]` entries.
 2. Write the CHANGELOG entry.
-3. Gate: test, clippy `-D warnings`, fmt, doc, and `cargo package -p turul-agent-skills -p turul-agent-skills-cli --no-verify --allow-dirty` all clean.
+3. Gate: test, clippy `-D warnings`, fmt, doc, and `cargo package -p turul-agent-skills -p turul-agent-skills-cli --no-verify --allow-dirty` all clean. Then `cargo package -p turul-agent-skills` and `cargo test` inside the extracted `target/package/turul-agent-skills-X.Y.Z.crate`: a published test must not read outside its package (workspace-only tests are listed in the crate's `exclude`).
 4. Commit, push `main`, tag `vX.Y.Z`, push the tag.
 5. Publish `turul-agent-skills`, then `turul-agent-skills-cli`.
 

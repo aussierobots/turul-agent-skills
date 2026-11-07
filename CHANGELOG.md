@@ -5,6 +5,20 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-07
+
+### Fixed
+
+- The published `turul-agent-skills` package runs its own tests: fixtures are found inside the
+  package, and the tests that read the rest of the workspace (examples, root README, every crate)
+  are no longer shipped. `turul-agent-skills-cli` no longer ships its workspace-only CLI test.
+  No library or CLI behaviour changed.
+
+### Verification
+
+`cargo test` in the extracted `turul-agent-skills-0.1.1.crate`: every shipped suite passes,
+including the `skills-ref` conformance corpus.
+
 ## [0.1.0] - 2026-11-07
 
 ### Added

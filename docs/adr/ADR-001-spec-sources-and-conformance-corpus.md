@@ -2,7 +2,7 @@
 
 - **Status:** Accepted (2026-11-06; contract tests `conformance.rs`, `dependency_direction.rs` green)
 - **Date:** 2026-11-06
-- **Implements:** `crates/turul-agent-skills/tests/conformance.rs`, `crates/turul-agent-skills/tests/dependency_direction.rs`
+- **Implements:** `crates/turul-agent-skills/tests/conformance.rs`, `crates/turul-agent-skills/tests/dependency_direction.rs` (workspace only, not published)
 - **Depends on:** nothing. Every later ADR cites this one for its normative source.
 
 ## 1. Context
@@ -244,3 +244,4 @@ The other ADRs cite these by label. Decided by the maintainer on 2026-11-06.
 - 2026-11-06 — Divergence row for the colon fallback restored at library level: `load` repairs, `validate` and the CLI match `skills-ref`.
 - 2026-11-06 — §2.6 holds the maintainer decision table (D1–D17), moved from the bootstrap plan, which is retired.
 - 2026-11-06 — D18 added: best-practice guidance is advisory (`advise`, ADR-010), not validation.
+- 2026-11-07 — Published tests stay inside their package: the conformance corpus and its fixtures ship with `turul-agent-skills` and pass `cargo test` in the extracted `.crate`. Tests that read the rest of the workspace are listed in each crate's `exclude` and run only under `cargo test --workspace`: `dependency_direction.rs`, `single_owner.rs`, `readme_snippets.rs`, `example_skills.rs` (library) and `cli.rs` (CLI).

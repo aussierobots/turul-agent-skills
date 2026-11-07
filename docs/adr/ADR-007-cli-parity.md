@@ -2,7 +2,7 @@
 
 - **Status:** Accepted (2026-11-06; contract tests `cli.rs` green)
 - **Date:** 2026-11-06
-- **Implements:** `crates/turul-agent-skills-cli/tests/cli.rs`
+- **Implements:** `crates/turul-agent-skills-cli/tests/cli.rs` (workspace only, not published)
 - **Depends on:** ADR-001 (corpus, divergences), ADR-004 (messages), ADR-006 (catalog bytes); D6, D8
 
 ## 1. Context
@@ -141,3 +141,4 @@ Example (`p-read-metadata`):
 - 2026-11-06 — Row 6 `E` is the first skip error, ordered by the library (ADR-004); `skip_reason_is_the_error_that_caused_the_skip` added.
 - 2026-11-06 — Accepted: `cli.rs` green under `cargo test --workspace`; no alternative path remains (`single_owner.rs` green: one parser, `discover` through `load` only). Defaults marked pending maintainer review stay marked; reversing one is a revision, not a new path.
 - 2026-11-06 — Row 9 states the missing-path usage block is click-shaped and printed by the CLI; other usage errors come from clap.
+- 2026-11-07 — `cli.rs` runs over the library's fixtures, so it is excluded from the published CLI package and runs under `cargo test --workspace` only (ADR-001).

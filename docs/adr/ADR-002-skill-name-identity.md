@@ -2,7 +2,7 @@
 
 - **Status:** Accepted (2026-11-06; contract tests `skill_name.rs`, `single_owner.rs` green)
 - **Date:** 2026-11-06
-- **Implements:** `crates/turul-agent-skills/tests/skill_name.rs`, `crates/turul-agent-skills/tests/single_owner.rs`
+- **Implements:** `crates/turul-agent-skills/tests/skill_name.rs`, `crates/turul-agent-skills/tests/single_owner.rs` (workspace only, not published)
 - **Depends on:** ADR-001 (sources, D3 resolution)
 
 ## 1. Context
@@ -127,3 +127,4 @@ is one test:
 - 2026-11-06 — `parse_skill_md_called_only_from_validate_and_load` is scoped to the crates' `src/`; the allowance for the `smoke` example is deleted (the rule is internal routing; `parse_skill_md` stays public). The `SkillName(` check ignores comment lines like the `SkillProperties` check.
 - 2026-11-06 — `NameViolation` and `NameError` are `#[non_exhaustive]`; `BuildError::Name` wraps `NameError` (ADR-004).
 - 2026-11-07 — `parse_skill_md(` routing narrowed to `src/validate.rs` (`load.rs` reaches it through `read_and_parse` and `parse_text`); test renamed `parse_skill_md_called_only_from_validate`.
+- 2026-11-07 — `single_owner.rs` reads every crate and the examples, so it is excluded from the published package and runs under `cargo test --workspace` only (ADR-001).

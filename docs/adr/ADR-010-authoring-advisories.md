@@ -2,7 +2,7 @@
 
 - **Status:** Accepted (2026-11-06; contract tests `advise.rs` green)
 - **Date:** 2026-11-06
-- **Implements:** `crates/turul-agent-skills/tests/advise.rs`
+- **Implements:** `crates/turul-agent-skills/tests/advise.rs`, `crates/turul-agent-skills/tests/example_skills.rs` (workspace only, not published)
 - **Depends on:** ADR-001 (D18), ADR-004 (`ErrorCode`, `ValidationError`)
 
 ## 1. Context
@@ -73,3 +73,4 @@ diagnostics of `load` (ADR-004).
 
 - 2026-11-06 — Initial. `advise`, `MAX_RECOMMENDED_LINES`, two error codes; judgment left to `skill-review`.
 - 2026-11-06 — Accepted: `advise.rs` green under `cargo test --workspace`.
+- 2026-11-07 — The checks over the workspace's example and reference skills move to `tests/example_skills.rs`, excluded from the published package because the examples are not in it; `advise.rs` keeps the self-contained rules.

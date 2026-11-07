@@ -7,12 +7,16 @@ use std::path::{Path, PathBuf};
 use serde_json::Value;
 use tempfile::TempDir;
 
+/// The library crate's fixtures. The CLI tests include this module from the
+/// library, so a crate without its own `tests/fixtures` uses the library's.
 pub fn fixtures_dir() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .ancestors()
-        .nth(2)
-        .unwrap()
-        .join("crates/turul-agent-skills/tests/fixtures")
+    let crate_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let own = crate_dir.join("tests/fixtures");
+    if own.is_dir() {
+        own
+    } else {
+        crate_dir.join("../turul-agent-skills/tests/fixtures")
+    }
 }
 
 pub fn fixture_ids() -> Vec<String> {

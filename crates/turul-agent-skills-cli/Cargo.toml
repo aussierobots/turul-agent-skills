@@ -2,6 +2,8 @@
 name = "turul-agent-skills-cli"
 description = "skills-ref compatible command line for Agent Skills (SKILL.md)"
 readme = "README.md"
+# The CLI tests run over the library's fixtures, which are not in this package.
+exclude = ["tests/cli.rs"]
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
