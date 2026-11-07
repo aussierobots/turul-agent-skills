@@ -5,6 +5,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `examples/skill-llm`: `OLLAMA_NUM_CTX` sets the Ollama context window through
+  `OllamaClient::with_num_ctx`, so the example needs a turul-llm 0.1 release that has it.
+  Thinking models such as `gemma4` need `16384`; Ollama may default to 4096.
+
 ## [0.1.0]
 
 ### Added

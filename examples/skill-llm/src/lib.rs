@@ -2,7 +2,8 @@
 //!
 //! The stub is the default and needs no network. A live Ollama is used only when
 //! `OLLAMA_BASE_URL` is set, or `RUN_OLLAMA_SMOKE=1` (then `http://localhost:11434`).
-//! `OLLAMA_MODEL` names the model (default `llama3.1`).
+//! `OLLAMA_MODEL` names the model (default `llama3.1`). `OLLAMA_NUM_CTX` sets the context
+//! window; Ollama's default can be 4096 tokens, too small for thinking models such as gemma4.
 
 use std::collections::VecDeque;
 use std::sync::Mutex;
@@ -47,7 +48,12 @@ pub fn client(stub: Stub) -> (&'static str, Box<dyn LlmClient>) {
     match ollama_base_url() {
         Some(base) => {
             let model = std::env::var("OLLAMA_MODEL").unwrap_or_else(|_| "llama3.1".to_string());
-            ("live-ollama", Box::new(OllamaClient::new(base, model)))
+            let mut client = OllamaClient::new(base, model);
+            if let Ok(v) = std::env::var("OLLAMA_NUM_CTX") {
+                let num_ctx = v.trim().parse().expect("OLLAMA_NUM_CTX is a token count");
+                client = client.with_num_ctx(num_ctx);
+            }
+            ("live-ollama", Box::new(client))
         }
         None => ("offline-stub", Box::new(stub)),
     }

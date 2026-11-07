@@ -18,6 +18,7 @@ For a live model:
 | `RUN_OLLAMA_SMOKE=1` | Use Ollama at `http://localhost:11434` |
 | `OLLAMA_BASE_URL` | Use Ollama at this URL (implies live mode) |
 | `OLLAMA_MODEL` | Model name, default `llama3.1` |
+| `OLLAMA_NUM_CTX` | Context window in tokens; set `16384` for thinking models such as `gemma4` (Ollama may default to 4096) |
 
 `skills/` holds the example skills; `skills/skill-review/` reviews another skill against the
 [agentskills.io best practices](https://agentskills.io/skill-creation/best-practices) and models them; `skills/reference/` holds three Apache-2.0 skills from
