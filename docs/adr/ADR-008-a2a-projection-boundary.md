@@ -1,6 +1,6 @@
 # ADR-008: A2A projection boundary and ownership migration
 
-- **Status:** Proposed (stays Proposed until turul-a2a deletes `SkillCard::parse`)
+- **Status:** Accepted (2026-11-07: turul-a2a 0.2.7 deleted `SkillCard::parse` and serde_yaml)
 - **Date:** 2026-11-06
 - **Implements:** `crates/turul-agent-skills/tests/a2a_boundary.rs`
 - **Depends on:** ADR-001 (§deps), ADR-003, ADR-004, ADR-005; D4, D9
@@ -135,3 +135,4 @@ strictyaml 1.7.3 parses the frontmatter (probe, as in ADR-003) to the expected s
 - 2026-11-06 — Re-checked at release: stays Proposed, turul-a2a still defines `SkillCard::parse`; `a2a_boundary.rs` green.
 - 2026-11-06 — `id` row aligned with the `a2a-id` rule below it (`AgentSkill.id` = `a2a-id` when present).
 - 2026-11-07 — Embedded skills: turul-a2a loads `include_str!` manifests with `load_str`; asset files of an embedded skill are read through an a2a-owned reader keyed by the `assets/` relative path; `TryFrom<&Skill>` stays the disk-backed form. No new field mapping.
+- 2026-11-07 — Accepted. turul-a2a 0.2.7 (crates.io) loads skills through `load` and `load_str` from turul-agent-skills 0.1; `SkillCard::parse` and `serde_yaml` are deleted; wire ids unchanged; every a2a example skill passes `turul-skills validate`. The §5 handoff is executed.
