@@ -1,5 +1,11 @@
 # Turul Agent Skills
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/turul/logo-dark.png">
+  <img src="docs/assets/turul/logo-light.png" alt="Turul AGENT SKILLS" width="600">
+</picture>
+
+
 Rust tooling for [Agent Skills](https://agentskills.io): the open `SKILL.md` format, stewarded
 by the Linux Foundation's [Agentic AI Foundation](https://aaif.io/projects/agent-skills), for
 packaging instructions, scripts and resources that an AI agent loads when a task calls for them.
@@ -121,3 +127,8 @@ Rust 1.94 or later.
 
 Licensed under either of [Apache License 2.0](LICENSE-APACHE) or [MIT](LICENSE-MIT), at your
 option.
+
+## Brand artwork
+
+Turul brand artwork is © 2026 Toast Technology Pty Ltd, all rights reserved,
+and is excluded from the software licence. See the [artwork notice](docs/assets/turul/ARTWORK-NOTICE.md) and [master assets](https://github.com/aussierobots/turul-brand).
