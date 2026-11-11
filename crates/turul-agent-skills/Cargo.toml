@@ -17,6 +17,8 @@ repository.workspace = true
 keywords.workspace = true
 categories = ["parser-implementations"]
 rust-version.workspace = true
+documentation = "https://docs.rs/turul-agent-skills"
+homepage.workspace = true
 
 [dependencies]
 unicode-normalization = { workspace = true }

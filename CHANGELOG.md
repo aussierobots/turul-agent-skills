@@ -5,6 +5,11 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Point package homepages and project links to Aussie Robots; add explicit API documentation links and review discovery metadata.
+
+
 ## [0.1.1] - 2026-11-07
 
 ### Fixed
