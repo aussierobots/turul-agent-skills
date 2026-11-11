@@ -5,9 +5,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+_Release 0.1.2 (`turul-agent-skills`, `turul-agent-skills-cli`; shared workspace version) when published._
+
 ### Changed
 
 - Point package homepages and project links to Aussie Robots; add explicit API documentation links and review discovery metadata.
+- Rewrite the `turul-agent-skills` docs.rs front page to open with a summary, one example and links onward.
 
 
 ## [0.1.1] - 2026-11-07
