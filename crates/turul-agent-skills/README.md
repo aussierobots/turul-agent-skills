@@ -1,30 +1,48 @@
-# turul-agent-skills
+Parse, validate, render and catalog [Agent Skills](https://agentskills.io): `SKILL.md`
+directories holding YAML frontmatter that names a capability and Markdown instructions an LLM agent
+loads when a task calls for it. See the [specification](https://agentskills.io/specification).
 
-Parse, validate, render and catalog [Agent Skills](https://agentskills.io).
+Use this crate to read, check, write or list skills from Rust, or to put the `<available_skills>`
+catalog in a model prompt. It agrees with the `skills-ref` reference implementation (version 0.1)
+on validation, and has no async runtime, network or LLM dependency. For the same checks from a
+shell, install [`turul-agent-skills-cli`](https://crates.io/crates/turul-agent-skills-cli), which provides
+the `turul-skills` command. The [differences from `skills-ref`](#spec-conformance-and-divergences)
+are listed at the end.
 
-An Agent Skill is a directory holding a `SKILL.md` file: YAML frontmatter that names and
-describes a capability, then Markdown instructions for an LLM agent, optionally with bundled
-scripts and references. An agent shows the model a catalog of names and descriptions, and loads
-a skill's full instructions only when the task calls for it. See the
-[specification](https://agentskills.io/specification).
+# Example
 
-This crate follows the Agent Skills specification and agrees with the `skills-ref` reference
-implementation (version 0.1) on validation. It has no async runtime, no network and no LLM
-dependency. Where it differs from `skills-ref`, the
-[differences](#spec-conformance-and-divergences) are listed at the end.
-
-## Install
-
-```sh
-cargo add turul-agent-skills                 # the library
-cargo install turul-agent-skills-cli         # the `turul-skills` command
+```toml
+[dependencies]
+turul-agent-skills = "0.1"
 ```
 
-## Quick start
+```rust,no_run
+use std::path::Path;
+use turul_agent_skills::{load, to_prompt};
+
+let skill = load(Path::new("skills/greet"))?.skill;
+if let Some(catalog) = to_prompt(&[skill]) {
+    println!("{catalog}");
+}
+# Ok::<(), Box<dyn std::error::Error>>(())
+```
+
+# Where next
+
+- [`validate`](https://docs.rs/turul-agent-skills/latest/turul_agent_skills/fn.validate.html),
+  [`SkillBuilder`](https://docs.rs/turul-agent-skills/latest/turul_agent_skills/struct.SkillBuilder.html)
+  and [`discover`](https://docs.rs/turul-agent-skills/latest/turul_agent_skills/fn.discover.html):
+  the guide below walks through each.
+- [`prelude`](https://docs.rs/turul-agent-skills/latest/turul_agent_skills/prelude/index.html):
+  one glob import for the common types and functions.
+- [`examples/skill-llm`](https://github.com/aussierobots/turul-agent-skills/tree/main/examples/skill-llm):
+  skills driving an LLM, offline by default.
+
+# Guide
 
 `use turul_agent_skills::prelude::*;` imports the types and functions below.
 
-### Validate
+## Validate
 
 `validate` checks a skill directory against the specification and returns every problem found.
 An empty list means the skill is valid.
@@ -42,7 +60,7 @@ for error in &errors {
 # Ok::<(), std::io::Error>(())
 ```
 
-### Load and read properties
+## Load and read properties
 
 `load` is lenient: a skill that is usable but imperfect loads with diagnostics, and only a
 skill that cannot be used is skipped.
@@ -75,7 +93,7 @@ match load(&dir) {
 A skill embedded in a binary (`include_str!`) loads with `load_str(dir_name, text)`: the same
 rules, with `dir_name` standing in for the directory and no `location`.
 
-### Create and write a skill
+## Create and write a skill
 
 `SkillBuilder` parses the name and trims the description, so a `Skill` always has a legal identity
 and a non-empty description. `build` returns `BuildError` otherwise.
@@ -97,7 +115,7 @@ assert!(turul_agent_skills::validate(file.parent().unwrap()).is_empty());
 # Ok::<(), std::io::Error>(())
 ```
 
-### Modify an existing skill
+## Modify an existing skill
 
 Load, change a field, write back. Frontmatter keys outside the specification and the body are
 preserved.
@@ -119,7 +137,7 @@ assert_eq!(reloaded.body, "Say hello.\n");
 # Ok::<(), std::io::Error>(())
 ```
 
-### Catalog prompt
+## Catalog prompt
 
 `to_prompt` renders the `<available_skills>` block a model sees at the start of a session. It
 returns `None` when there are no skills, because an empty catalog is better omitted.
@@ -139,7 +157,7 @@ assert_eq!(to_prompt(&[]), None);
 # Ok::<(), std::io::Error>(())
 ```
 
-### Authoring advisories
+## Authoring advisories
 
 `advise` reports the two measurable recommendations of the specification's progressive-disclosure
 guidance: a `SKILL.md` over 500 lines, and file references nested deeper than one level. It is
@@ -159,7 +177,7 @@ assert_eq!(advisories[0].code(), ErrorCode::SkillMdTooLong);
 assert!(advisories[0].message().contains("500"));
 ```
 
-### Activation
+## Activation
 
 When the model asks for a skill, `activation` returns its instructions, its directory and the
 names of the files bundled with it. Bundled files are listed, never read.
@@ -180,7 +198,7 @@ assert!(text.contains("<file>scripts/hello.sh</file>"));
 # Ok::<(), std::io::Error>(())
 ```
 
-### Discover skills
+## Discover skills
 
 `discover` scans the directories you give it, loads every skill it finds and resolves name
 collisions: a project skill beats a user skill, and each skill that loses is reported as a
@@ -203,7 +221,7 @@ for diagnostic in &found.diagnostics {
 # Ok::<(), std::io::Error>(())
 ```
 
-## Command line
+# Command line
 
 `turul-agent-skills-cli` installs `turul-skills`, with the same `validate`, `read-properties`
 and `to-prompt` commands, output and exit codes as `skills-ref`.
@@ -230,7 +248,7 @@ $ echo $?
 
 `to-prompt greet` prints the same `<available_skills>` block as the library's `to_prompt`.
 
-## Examples with an LLM
+# Examples with an LLM
 
 [`examples/skill-llm`](https://github.com/aussierobots/turul-agent-skills/tree/main/examples/skill-llm) uses [turul-llm](https://github.com/aussierobots/turul-llm) to let a model
 pick a skill from the catalog and use it (`catalog`), and to draft, validate, write and modify
@@ -244,7 +262,7 @@ RUN_OLLAMA_SMOKE=1 cargo run -p skill-llm --bin catalog   # a live local Ollama 
 RUN_OLLAMA_SMOKE=1 cargo run -p skill-llm --bin smoke
 ```
 
-## Spec conformance and divergences
+# Spec conformance and divergences
 
 The specification is followed; where `skills-ref` 0.1 and the specification differ, or
 `skills-ref` has a defect, the choice is recorded in
