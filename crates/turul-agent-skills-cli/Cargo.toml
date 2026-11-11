@@ -12,6 +12,8 @@ repository.workspace = true
 keywords.workspace = true
 categories = ["command-line-utilities"]
 rust-version.workspace = true
+documentation = "https://docs.rs/turul-agent-skills-cli"
+homepage.workspace = true
 
 [dependencies]
 turul-agent-skills = { workspace = true }
