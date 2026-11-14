@@ -160,8 +160,9 @@ test that pins each row; the file is in parentheses.
 ### 2.4 Dependency direction (§deps)
 
 Publish crates (`crates/*`) carry no normal or target-specific dependency whose name starts
-with `turul-llm`, `turul-a2a`, `tokio` or `reqwest`. LLM clients are used only by
-`examples/`. A2A projection lives in turul-a2a, on top of this crate's types.
+with `turul-llm`, `turul-a2a`, `turul-mcp`, `tokio` or `reqwest`. LLM clients are used only by
+`examples/`. A2A projection lives in turul-a2a and MCP serving in turul-mcp-framework, on top of
+this crate's types.
 
 Owner: `crates/turul-agent-skills/tests/dependency_direction.rs`, which parses every
 `crates/*/Cargo.toml`:
@@ -192,7 +193,7 @@ gap, so no turul-llm handoff.** The offline stub implements `LlmClient` in the e
 
 ### 2.6 Maintainer decisions
 
-The other ADRs cite these by label. Decided by the maintainer on 2026-11-06.
+The other ADRs cite these by label. Decided by the maintainer on 2026-11-06, except D19 (2026-11-14).
 
 | # | Decision | Recommendation / decision |
 |---|----------|----------------|
@@ -214,6 +215,7 @@ The other ADRs cite these by label. Decided by the maintainer on 2026-11-06.
 | D16 | File size | Not capped; the caller bounds what it scans (ADR-004) |
 | D17 | CI | GitHub Actions: fmt, clippy, test, doc on stable; `cargo check` on MSRV 1.94 |
 | D18 | Best practices | `advise` reports the two measurable spec recommendations (ADR-010); judgment is the `skill-review` example's job |
+| D19 | Bundled files | `bundled_files` (ADR-011) lists every file in a skill directory except the skill file: `.git` is excluded as version-control metadata; `node_modules` and hidden files are listed (spec: a skill directory "may contain any files and directories"); symlinks listed, never followed; device nodes, sockets and FIFOs not listed; a non-UTF-8 name is an error. Discovery's `.git`/`node_modules` skip (client guide scanning rule) stays a discovery rule | `bundled_files.rs` |
 
 ## 3. Consequences
 
@@ -245,3 +247,5 @@ The other ADRs cite these by label. Decided by the maintainer on 2026-11-06.
 - 2026-11-06 — §2.6 holds the maintainer decision table (D1–D17), moved from the bootstrap plan, which is retired.
 - 2026-11-06 — D18 added: best-practice guidance is advisory (`advise`, ADR-010), not validation.
 - 2026-11-07 — Published tests stay inside their package: the conformance corpus and its fixtures ship with `turul-agent-skills` and pass `cargo test` in the extracted `.crate`. Tests that read the rest of the workspace are listed in each crate's `exclude` and run only under `cargo test --workspace`: `dependency_direction.rs`, `single_owner.rs`, `readme_snippets.rs`, `example_skills.rs` (library) and `cli.rs` (CLI).
+- 2026-11-14 — §2.4: `turul-mcp` added to the forbidden dependency prefixes (MCP boundary, ADR-011).
+- 2026-11-14 — D19 added: bundled-file policy (maintainer review).

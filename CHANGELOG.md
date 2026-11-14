@@ -5,13 +5,29 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
-_Release 0.1.2 (`turul-agent-skills`, `turul-agent-skills-cli`; shared workspace version) when published._
+## [0.1.3]
+
+### Added
+
+- `bundled_files(&Skill)`: the complete list of a skill's bundled files, as sorted `/`-joined
+  relative paths. No count or depth cap; symbolic links are listed and never followed; `.git`
+  is skipped; an unreadable directory or a non-UTF-8 name is an error rather
+  than a partial list. See ADR-011.
+
+### Changed
+
+- `activation` lists the first `MAX_RESOURCE_FILES` of `bundled_files`. Files nested deeper than
+  `MAX_SCAN_DEPTH` are now listed (before, they were dropped without a note). If any directory
+  or entry at any depth cannot be read, or any file name is not UTF-8, no files are listed;
+  before, unreadable entries were skipped and non-UTF-8 names were listed in lossy form.
+  `node_modules` is now listed like any other skill content; `.git` is still skipped.
+
+## [0.1.2] - 2026-11-11
 
 ### Changed
 
 - Point package homepages and project links to Aussie Robots; add explicit API documentation links and review discovery metadata.
 - Rewrite the `turul-agent-skills` docs.rs front page to open with a summary, one example and links onward.
-
 
 ## [0.1.1] - 2026-11-07
 

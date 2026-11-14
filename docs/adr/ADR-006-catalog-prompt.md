@@ -2,7 +2,7 @@
 
 - **Status:** Accepted (2026-11-06; contract tests `catalog_prompt.rs` green)
 - **Date:** 2026-11-06
-- **Implements:** `crates/turul-agent-skills/tests/catalog_prompt.rs`
+- **Implements:** `crates/turul-agent-skills/tests/catalog_prompt.rs`, `crates/turul-agent-skills/tests/bundled_files.rs`
 - **Depends on:** ADR-001 (corpus `r-*`), ADR-004 (`Skill`, `location`); D6
 
 ## 1. Context
@@ -29,7 +29,7 @@ directory and a `<skill_resources>` list; "Listing bundled resources" says to li
 | Catalog | — | `to_prompt(&[Skill]) -> Option<String>` | `src/prompt.rs` |
 | Activation text | — | `activation(&Skill) -> String` | `src/prompt.rs` |
 | Escaping | private `escape_html(&str) -> String` (the five mappings above, `&` first) | used by both | `src/prompt.rs` |
-| Skipped directories | consumes `SKIPPED_DIRS` and `MAX_SCAN_DEPTH` from ADR-009; defines neither | used by `activation` | `src/prompt.rs` |
+| Bundled files | consumes `bundled_files(&Skill)` (ADR-011); defines no walk of its own | used by `activation` | `src/prompt.rs` |
 | Resource cap | `pub const MAX_RESOURCE_FILES: usize = 100` | used by `activation` | `src/prompt.rs` |
 
 ### 2.2 Catalog bytes
@@ -69,10 +69,10 @@ Relative paths in this skill are relative to the skill directory.
 
 - `{dir}` = parent of `location`; it and every `<file>` path are unescaped (same reason as `<location>`). Without a location
   the two directory lines, the blank line before them and the resource block are omitted.
-- Resources: every regular file under `{dir}`, recursively, except the skill file itself;
-  relative paths with `/`; sorted by byte order; `.git` and `node_modules` skipped; symlinks
-  listed as files, never followed; depth limited by ADR-009 `MAX_SCAN_DEPTH`. Names are listed,
-  never opened. Unreadable directories are skipped silently.
+- Resources: `bundled_files(skill)` (ADR-011): every file or symbolic link under `{dir}`, recursively,
+  except the skill file itself; relative paths with `/`; sorted by byte order; `.git` skipped
+  (`node_modules` is listed); symlinks listed under their own name, never followed; no depth limit. Names are listed,
+  never opened. When the walk fails, no files are listed (`bundled_files` reports the error).
 - More than `MAX_RESOURCE_FILES` → the first 100 `<file>` lines, then the line
   `  (listing truncated at 100 files)`.
 - No resources → the `<skill_resources>` block and the blank line before it are omitted.
@@ -96,7 +96,8 @@ Relative paths in this skill are relative to the skill directory.
 | Name attribute is the skill name (a `SkillName` holds no escapable character, so escaping cannot be observed) | `activation_name_attribute_is_the_skill_name` |
 | Skill without a location: no `<location>` lines | `to_prompt_omits_location_without_one` |
 | Activation without a location: no directory lines, no resource block | `activation_without_location_omits_directory_and_resources` |
-| Symlinks listed, never followed; depth capped at `MAX_SCAN_DEPTH`; `.git`, `node_modules` skipped | `activation_does_not_follow_symlinks_and_caps_depth` |
+| Symlinks listed, never followed; every depth listed; `.git` skipped, `node_modules` listed | `activation_lists_symlinks_unfollowed_and_every_depth` |
+| Activation lists the first `MAX_RESOURCE_FILES` of `bundled_files` | `activation_lists_the_first_files_of_the_same_walk` (`bundled_files.rs`) |
 
 ## 3. Alternatives considered
 
@@ -125,3 +126,5 @@ Relative paths in this skill are relative to the skill directory.
 - 2026-11-06 — Accepted: `catalog_prompt.rs` green under `cargo test --workspace`; no alternative path remains (`single_owner.rs` green: one parser, `discover` through `load` only).
 - 2026-11-06 — Location-less skills are built with `SkillBuilder` (ADR-004); `Skill::new` is crate-private.
 - 2026-11-06 — The `.git`/`node_modules` skip list is the crate-private `SKIPPED_DIRS` owned by `discover.rs` (ADR-009); `prompt.rs` consumes it.
+- 2026-11-14 — The resource walk moves to `bundled_files` (ADR-011), public and uncapped; `activation` lists its first `MAX_RESOURCE_FILES`. Contract change: the `MAX_SCAN_DEPTH` limit no longer applies to a skill's own files, so every file in the directory is listed (client guide: the activation listing enumerates the supporting files in the skill directory); symlinks stay listed, never followed. Test `activation_does_not_follow_symlinks_and_caps_depth` becomes `activation_lists_symlinks_unfollowed_and_every_depth`.
+- 2026-11-14 — Also changed with the move to `bundled_files`: `node_modules` is listed as skill content and only `.git` is skipped (D19); a walk that fails (unreadable entry or non-UTF-8 name) lists no files, where unreadable entries were skipped before.

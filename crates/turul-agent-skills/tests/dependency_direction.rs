@@ -4,7 +4,7 @@
 
 use std::path::{Path, PathBuf};
 
-const FORBIDDEN_PREFIXES: &[&str] = &["turul-llm", "turul-a2a", "tokio", "reqwest"];
+const FORBIDDEN_PREFIXES: &[&str] = &["turul-llm", "turul-a2a", "turul-mcp", "tokio", "reqwest"];
 
 fn workspace_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))

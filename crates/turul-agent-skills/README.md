@@ -198,6 +198,11 @@ assert!(text.contains("<file>scripts/hello.sh</file>"));
 # Ok::<(), std::io::Error>(())
 ```
 
+`activation` shows at most `MAX_RESOURCE_FILES` names. `bundled_files` returns the complete list
+it draws from: every file in the skill directory except `SKILL.md`, as sorted `/`-joined relative
+paths, with symbolic links listed but never followed and `.git` skipped. Use
+it when every file matters, for example to serve or checksum a skill's files.
+
 ## Discover skills
 
 `discover` scans the directories you give it, loads every skill it finds and resolves name

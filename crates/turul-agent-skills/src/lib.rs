@@ -3,6 +3,7 @@
 
 mod advise;
 mod builder;
+mod bundle;
 mod discover;
 mod error;
 mod load;
@@ -16,6 +17,7 @@ mod validate;
 
 pub use advise::{MAX_RECOMMENDED_LINES, advise};
 pub use builder::{BuildError, SkillBuilder};
+pub use bundle::bundled_files;
 pub use discover::{
     Diagnostic, Discovered, MAX_SCAN_DEPTH, MAX_SCAN_DIRS, Scope, ScopeKind, discover,
 };

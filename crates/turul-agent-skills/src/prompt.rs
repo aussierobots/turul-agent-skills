@@ -1,7 +1,4 @@
-use std::fs;
-use std::path::Path;
-
-use crate::discover::{MAX_SCAN_DEPTH, SKIPPED_DIRS};
+use crate::bundle::bundled_files;
 use crate::skill::Skill;
 
 /// Most resource files [`activation`] lists before truncating.
@@ -56,8 +53,11 @@ pub fn to_prompt(skills: &[Skill]) -> Option<String> {
 }
 
 /// The text a client returns when a skill is activated: the trimmed body, the
-/// skill directory and a capped list of bundled files. Files are listed by
-/// name and never opened.
+/// skill directory and the first [`MAX_RESOURCE_FILES`] of its
+/// [`bundled_files`](crate::bundled_files), with a note when the list is cut.
+/// Files are listed by name and never opened. When the directory cannot be
+/// read, no files are listed; call [`bundled_files`](crate::bundled_files) to
+/// see the error.
 ///
 /// A skill without a [location](Skill::location) has no directory, so only the
 /// body is returned.
@@ -96,7 +96,8 @@ pub fn activation(skill: &Skill) -> String {
             "\nSkill directory: {}\nRelative paths in this skill are relative to the skill directory.\n",
             dir.to_string_lossy()
         ));
-        let resources = list_resources(dir, location);
+        // The listing is a hint to the model; an unreadable directory lists nothing.
+        let resources = bundled_files(skill).unwrap_or_default();
         if !resources.is_empty() {
             out.push_str("\n<skill_resources>\n");
             for file in resources.iter().take(MAX_RESOURCE_FILES) {
@@ -121,40 +122,4 @@ fn escape_html(text: &str) -> String {
         .replace('>', "&gt;")
         .replace('"', "&quot;")
         .replace('\'', "&#x27;")
-}
-
-/// Files under `dir` except `skill_file`, as `/`-joined relative paths in byte order.
-/// Symbolic links count as files and are not followed.
-fn list_resources(dir: &Path, skill_file: &Path) -> Vec<String> {
-    let mut files = Vec::new();
-    collect(dir, "", 0, skill_file, &mut files);
-    files.sort_unstable();
-    files
-}
-
-fn collect(dir: &Path, prefix: &str, depth: usize, skill_file: &Path, files: &mut Vec<String>) {
-    let Ok(entries) = fs::read_dir(dir) else {
-        return;
-    };
-    for entry in entries.flatten() {
-        let Ok(kind) = entry.file_type() else {
-            continue;
-        };
-        let name = entry.file_name().to_string_lossy().into_owned();
-        let relative = format!("{prefix}{name}");
-        if kind.is_dir() {
-            let skipped = SKIPPED_DIRS.contains(&name.as_str());
-            if !skipped && depth < MAX_SCAN_DEPTH {
-                collect(
-                    &entry.path(),
-                    &format!("{relative}/"),
-                    depth + 1,
-                    skill_file,
-                    files,
-                );
-            }
-        } else if (kind.is_file() || kind.is_symlink()) && entry.path() != skill_file {
-            files.push(relative);
-        }
-    }
 }

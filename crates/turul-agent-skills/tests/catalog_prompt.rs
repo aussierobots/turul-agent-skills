@@ -295,12 +295,12 @@ fn activation_without_location_omits_directory_and_resources() {
 
 #[cfg(unix)]
 #[test]
-fn activation_does_not_follow_symlinks_and_caps_depth() {
+fn activation_lists_symlinks_unfollowed_and_every_depth() {
     let (_tmp, root) = root();
     let skill = make_skill(&root, "my-skill", "my-skill", "d", "Body");
     let dir = root.join("my-skill");
 
-    // A symlinked directory is listed as one file and its contents are not.
+    // A symlinked directory is listed as one entry and its contents are not.
     let outside = root.join("outside");
     fs::create_dir(&outside).unwrap();
     fs::write(outside.join("hidden.txt"), "x").unwrap();
@@ -312,7 +312,7 @@ fn activation_does_not_follow_symlinks_and_caps_depth() {
         fs::write(dir.join(skipped).join("x.txt"), "x").unwrap();
     }
 
-    // Files in a directory at MAX_SCAN_DEPTH are listed; one level deeper is not entered.
+    // Nesting deeper than the discovery depth limit is still listed.
     let mut deepest = dir.clone();
     for level in 1..=MAX_SCAN_DEPTH {
         deepest = deepest.join(format!("d{level}"));
@@ -325,13 +325,15 @@ fn activation_does_not_follow_symlinks_and_caps_depth() {
     let text = activation(&skill);
     assert!(text.contains("  <file>link</file>\n"), "{text}");
     assert!(!text.contains("hidden.txt"));
-    assert!(!text.contains(".git") && !text.contains("node_modules"));
-    let at_limit = format!(
-        "{}at-limit.txt",
-        (1..=MAX_SCAN_DEPTH)
-            .map(|l| format!("d{l}/"))
-            .collect::<String>()
+    assert!(!text.contains(".git"));
+    assert!(text.contains("<file>node_modules/x.txt</file>"), "{text}");
+    let at_limit: String = (1..=MAX_SCAN_DEPTH).map(|l| format!("d{l}/")).collect();
+    assert!(
+        text.contains(&format!("<file>{at_limit}at-limit.txt</file>")),
+        "{text}"
     );
-    assert!(text.contains(&format!("<file>{at_limit}</file>")), "{text}");
-    assert!(!text.contains("beyond.txt"));
+    assert!(
+        text.contains(&format!("<file>{at_limit}too-deep/beyond.txt</file>")),
+        "{text}"
+    );
 }

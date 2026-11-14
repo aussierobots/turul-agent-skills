@@ -146,3 +146,17 @@ fn discover_calls_load_only() {
         assert!(!text.contains(other), "discover.rs calls {other}");
     }
 }
+
+#[test]
+fn bundled_file_walk_lives_in_bundle_only() {
+    let src = Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
+    let mut found: Vec<String> = fs::read_dir(&src)
+        .unwrap()
+        .map(|e| e.unwrap().path())
+        .filter(|path| fs::read_to_string(path).unwrap().contains("read_dir("))
+        .map(|path| path.file_name().unwrap().to_string_lossy().into_owned())
+        .collect();
+    found.sort();
+    // discover walks for skill directories; bundle walks a skill's own files.
+    assert_eq!(found, ["bundle.rs", "discover.rs"]);
+}
