@@ -1,6 +1,6 @@
 # ADR-011: MCP projection boundary and bundled files
 
-- **Status:** Proposed (stays Proposed until turul-mcp-framework serves skills through this crate's API with no parsing, validation or directory walk of its own)
+- **Status:** Accepted (2026-11-14: turul-mcp-framework main serves skills through `load` and `bundled_files`)
 - **Date:** 2026-11-14
 - **Implements:** `crates/turul-agent-skills/tests/bundled_files.rs`, `crates/turul-agent-skills/tests/single_owner.rs` (workspace only, not published), `crates/turul-agent-skills/tests/dependency_direction.rs` (workspace only, not published)
 - **Depends on:** ADR-001 (§deps), ADR-003, ADR-004, ADR-006, ADR-008, ADR-009
@@ -108,7 +108,7 @@ through `SkillName::parse`. A gap is a request to this crate, not a local implem
   directories were skipped and the rest listed. `bundled_files` reports the error.
 - `MAX_SCAN_DEPTH` now bounds discovery only.
 
-## 5. Handoff — turul-mcp-framework (mcp-skills session; not executed here)
+## 5. Handoff — turul-mcp-framework (mcp-skills session; executed)
 
 - Owner: mcp-skills. Goal: build the MCP skills extension on `load`/`discover`/`validate` and
   `bundled_files`; the manifest is sha256 over exactly `bundled_files`.
@@ -120,3 +120,4 @@ through `SkillName::parse`. A gap is a request to this crate, not a local implem
 
 - 2026-11-14 — Initial. `bundled_files` public, complete and uncapped; symlinks listed, never followed (unchanged from `activation`); depth cap removed for a skill's own files; MCP owner split; typed resolver not provided.
 - 2026-11-14 — Maintainer review (D19): `.git` is excluded as version-control metadata; `node_modules` is listed as skill content (spec: "any files and directories"); device nodes are not listed; a non-UTF-8 name fails the walk.
+- 2026-11-14 — Accepted. Checked on turul-mcp-framework main (PR #52) in `turul-mcp-ext-skills`. `SkillEntry::from_dir` calls `load` and then `bundled_files`, and reads the bytes itself; it refuses a symlink that resolves outside the skill directory. The frontmatter projection uses `parse_skill_md`/`RawValue` (`typed` refuses non-string plain scalars). `SkillName` is re-exported from this crate. There is no directory walk over a skill and no YAML parser outside tests (`serde_yml` is a dev-dependency used as an independent oracle). The example server lists its skills root one level deep and loads each skill by explicit path, because `discover` shadows same-named skills while MCP paths can hold two skills with the same name.
