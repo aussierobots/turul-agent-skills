@@ -5,6 +5,26 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.4]
+
+### Added
+
+- `RawValue::core_scalar`, `ResolvedScalar` and `CoreScalar`: a scalar's value under the YAML 1.2
+  core schema (null, bool, `i64` int, float or string), and `yaml_1_1_agrees`, false where a YAML
+  1.1 parser reads a different type or value (`yes`/`no`/`on`/`off`/`y`/`n`, `0777`, `1:30`,
+  `1_000`, `1e3`, timestamps). For hosts that serve typed frontmatter; validation and `load` are
+  unchanged and spec fields stay strings. See ADR-003 and ADR-011.
+
+### Changed
+
+- The `typed` flag on `RawValue::Str` and render quoting are now computed from the same YAML 1.2
+  and 1.1 resolvers. Every value quoted before is still quoted.
+
+### Fixed
+
+- Render now quotes a leading-dot number with `_` separators (`.5_0`), which YAML 1.1 parsers read
+  as a float; it was written plain.
+
 ## [0.1.3]
 
 ### Added

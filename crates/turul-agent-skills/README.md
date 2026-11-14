@@ -93,6 +93,11 @@ match load(&dir) {
 A skill embedded in a binary (`include_str!`) loads with `load_str(dir_name, text)`: the same
 rules, with `dir_name` standing in for the directory and no `location`.
 
+Every frontmatter value is read as a string, as the specification requires. A host that serves
+frontmatter to clients with typed YAML parsers can ask what a plain value would mean to them:
+`RawValue::core_scalar` gives its YAML 1.2 core-schema value (`version: 1.0` is a float) and
+whether YAML 1.1 agrees (`legacy: yes` is a string in 1.2 but a boolean in 1.1).
+
 ## Create and write a skill
 
 `SkillBuilder` parses the name and trims the description, so a `Skill` always has a legal identity

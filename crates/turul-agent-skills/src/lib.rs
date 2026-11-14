@@ -12,6 +12,7 @@ mod parse;
 pub mod prelude;
 mod prompt;
 mod render;
+mod scalar;
 mod skill;
 mod validate;
 
@@ -26,5 +27,6 @@ pub use load::{LoadSkip, Loaded, load, load_str};
 pub use name::{NameError, NameViolation, SkillName};
 pub use parse::{ParseError, RawSkill, RawValue, SkillProperties, parse_skill_md};
 pub use prompt::{MAX_RESOURCE_FILES, activation, to_prompt};
+pub use scalar::{CoreScalar, ResolvedScalar};
 pub use skill::Skill;
 pub use validate::validate;

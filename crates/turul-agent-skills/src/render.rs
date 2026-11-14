@@ -2,7 +2,8 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use crate::parse::{RawValue, reads_as_non_string};
+use crate::parse::RawValue;
+use crate::scalar::reads_as_non_string;
 use crate::skill::Skill;
 
 impl Skill {

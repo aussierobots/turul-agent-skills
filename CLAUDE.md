@@ -26,7 +26,7 @@ cargo test -p turul-agent-skills           # Library: parse, validate, render, c
 cargo test -p turul-agent-skills-cli       # skills-ref-compatible CLI
 cargo test -p turul-agent-skills --test conformance   # skills-ref corpus; others: skill_name, frontmatter,
 #   validate_and_load, builder, render, catalog_prompt, discovery, a2a_boundary, single_owner,
-#   dependency_direction, readme_snippets, advise, example_skills, bundled_files
+#   dependency_direction, readme_snippets, advise, example_skills, bundled_files, core_scalar
 cargo test -p turul-agent-skills-cli --test cli       # CLI output and exit codes
 cargo test --doc --workspace               # README quick-start snippets (library README; root README copy checked by readme_snippets)
 cargo run -p turul-agent-skills-cli -- validate path/to/skill   # binary: turul-skills
@@ -71,7 +71,7 @@ Every publish crate carries `LICENSE-APACHE` and `LICENSE-MIT` symlinks to `../.
 
 ### Crate Structure
 
-- `turul-agent-skills` — library. `SkillName` (validated newtype, the only way to obtain a name), `SkillProperties` (frontmatter), `Skill` (properties + body + location), `SkillBuilder` (`Skill::builder`; the construction entrypoint for new skills, `BuildError` on an illegal name or empty description), error types derived with `thiserror`, a `prelude` module for glob import, strict validation (spec, all errors), lenient loading (client guide, diagnostics), canonical rendering back to SKILL.md, `<available_skills>` catalog, bounded discovery over caller-supplied project/user roots (every candidate goes through the same loader), `advise` for the two measurable authoring recommendations (separate from validation), `bundled_files` (the one walk of a skill's own files, which `activation` lists from). No LLM, network or async deps.
+- `turul-agent-skills` — library. `SkillName` (validated newtype, the only way to obtain a name), `SkillProperties` (frontmatter), `Skill` (properties + body + location), `SkillBuilder` (`Skill::builder`; the construction entrypoint for new skills, `BuildError` on an illegal name or empty description), error types derived with `thiserror`, a `prelude` module for glob import, strict validation (spec, all errors), lenient loading (client guide, diagnostics), canonical rendering back to SKILL.md, `<available_skills>` catalog, bounded discovery over caller-supplied project/user roots (every candidate goes through the same loader), `advise` for the two measurable authoring recommendations (separate from validation), `bundled_files` (the one walk of a skill's own files, which `activation` lists from), `RawValue::core_scalar` (the one YAML scalar typing: 1.2 core value and YAML 1.1 agreement; `typed` and render quoting derive from it). No LLM, network or async deps.
 - `turul-agent-skills-cli` — `skills-ref`-compatible binary `turul-skills`: `validate`, `read-properties`, `to-prompt`; exit codes 0/1, 2 for a missing path or usage error.
 - `examples/skill-llm` — runnable examples (bins `catalog`, `author`, `smoke`; `skills/skill-review` reviews a skill against the best-practices page) that use skills with an LLM via [turul-llm](https://github.com/aussierobots/turul-llm) (`turul-llm-core` + `turul-llm-ollama`). Offline stub by default; `RUN_OLLAMA_SMOKE=1` (and `OLLAMA_MODEL`) selects live Ollama. `skills/reference` holds three vendored Apache-2.0 skills from anthropics/skills.
 

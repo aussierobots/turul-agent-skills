@@ -160,3 +160,28 @@ fn bundled_file_walk_lives_in_bundle_only() {
     // discover walks for skill directories; bundle walks a skill's own files.
     assert_eq!(found, ["bundle.rs", "discover.rs"]);
 }
+
+#[test]
+fn yaml_scalar_typing_lives_in_scalar_only() {
+    let src = Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
+    let definitions = [
+        "fn reads_as_non_string",
+        "fn is_timestamp",
+        "fn core(",
+        "fn yaml_1_1(",
+    ];
+    for entry in fs::read_dir(&src).unwrap() {
+        let path = entry.unwrap().path();
+        let name = path.file_name().unwrap().to_string_lossy().into_owned();
+        let text = fs::read_to_string(&path).unwrap();
+        if name != "scalar.rs" {
+            for definition in definitions {
+                assert!(!text.contains(definition), "{name} defines {definition}");
+            }
+        }
+        // Spec fields are strings: validation and loading never type a scalar.
+        if name == "validate.rs" || name == "load.rs" {
+            assert!(!text.contains("core_scalar"), "{name} calls core_scalar");
+        }
+    }
+}

@@ -2,7 +2,7 @@
 
 - **Status:** Accepted (2026-11-06; contract tests `frontmatter.rs` green)
 - **Date:** 2026-11-06
-- **Implements:** `crates/turul-agent-skills/tests/frontmatter.rs`
+- **Implements:** `crates/turul-agent-skills/tests/frontmatter.rs`, `crates/turul-agent-skills/tests/core_scalar.rs`
 - **Depends on:** ADR-001 (sources), ADR-002 (name is not parsed here, only carried as text); D4, D7
 
 ## 1. Context
@@ -38,6 +38,7 @@ suggests a fallback that quotes values containing colons and retries.
 |---|---|---|---|
 | Parsed document | `RawSkill { entries: Vec<(String, RawValue)>, body: String, repaired: Option<String> }` (`#[non_exhaustive]`) | `parse_skill_md(&str) -> Result<RawSkill, ParseError>` | `src/parse.rs` |
 | YAML value model | `#[non_exhaustive] RawValue::{Str { text: String, typed: bool }, Seq(Vec<RawValue>), Map(Vec<(String, RawValue)>)}` | built by `parse_skill_md`; reaches a `Skill` only through `load` (ADR-004) | `src/parse.rs` |
+| Scalar typing | `RawValue::core_scalar(&self) -> Option<ResolvedScalar>`; `ResolvedScalar { value: CoreScalar, yaml_1_1_agrees: bool }` (`#[non_exhaustive]`); `CoreScalar::{Null, Bool, Int(i64), IntOutOfRange, Float(f64), Str}`; crate-private `reads_as_non_string`, which sets `typed` and is derived from the same two resolvers | the only YAML scalar typing in the workspace; validation and `load` never call it | `src/scalar.rs` |
 | Spec fields | `SkillProperties { name: SkillName, description, license, compatibility, metadata: BTreeMap<String, String>, allowed_tools }`, `#[non_exhaustive]`, plus crate-private `SkillProperties::new(SkillName, impl Into<String>)` | literal only in `src/parse.rs`; filled by the field check in ADR-004 | `src/parse.rs` |
 | Parse failures | `ParseError::{FrontmatterMissing, FrontmatterUnclosed, InvalidYaml(String), NotMapping}` (`#[non_exhaustive]`, implements `Error` via `thiserror`) with `code()` from the shared `ErrorCode` | returned by `parse_skill_md` | `src/parse.rs`, codes in `src/error.rs` |
 
@@ -164,3 +165,4 @@ collection (rule 3). Duplicate keys and non-scalar keys (rules 5, 6) are checked
 - 2026-11-06 — Rule 15: nesting deeper than 64 levels is `yaml-invalid` (was implemented, now stated and tested).
 - 2026-11-06 — `RawValue` and `ParseError` are `#[non_exhaustive]`; `ParseError` messages come from `thiserror` attributes, text unchanged. `SkillProperties::new` is crate-private (construction goes through `SkillBuilder`, ADR-004).
 - 2026-11-06 — `RawSkill` is `#[non_exhaustive]`; only `parse_skill_md` builds it.
+- 2026-11-14 — Scalar typing moves to `src/scalar.rs` and becomes public: `RawValue::core_scalar` resolves a scalar under the YAML 1.2 core schema (1.2.2 §10.3.2) and reports whether the YAML 1.1 type repository reads the same value (the spec's `y`/`n` booleans included, which PyYAML omits; floats in PyYAML's form, so `1.2.3` is a string). `typed` is `reads_as_non_string`, a superset of both resolvers plus signed or underscored `0o`/`0x`/`0b`; it quotes everything the previous rule quoted, and also leading-dot underscored floats (ADR-005). Validation and `load` do not use the resolver: spec fields stay strings. Tests `core_scalar.rs`.

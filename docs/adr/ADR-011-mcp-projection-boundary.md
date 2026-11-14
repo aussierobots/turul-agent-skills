@@ -70,9 +70,11 @@ through `SkillName::parse`. A gap is a request to this crate, not a local implem
 
 ### 2.4 Not provided
 
-- A typed YAML 1.2 core-schema resolver for `RawValue`, and a typed flag on map keys. The spec's
-  fields are strings, and the framework's first cut needs strings only. Nothing breaks without
-  them; a consumer need reopens this.
+- A typed flag on map keys. The spec's keys are strings; nothing breaks without it, and a
+  consumer need reopens this.
+- The typed resolver, first listed here, is now provided (2026-11-14, maintainer approval):
+  `RawValue::core_scalar` (ADR-003). The framework may rely on its `value` under the YAML 1.2
+  core schema and on `yaml_1_1_agrees`, and must not type YAML scalars itself.
 
 ### 2.5 Rules and tests
 
@@ -121,3 +123,4 @@ through `SkillName::parse`. A gap is a request to this crate, not a local implem
 - 2026-11-14 — Initial. `bundled_files` public, complete and uncapped; symlinks listed, never followed (unchanged from `activation`); depth cap removed for a skill's own files; MCP owner split; typed resolver not provided.
 - 2026-11-14 — Maintainer review (D19): `.git` is excluded as version-control metadata; `node_modules` is listed as skill content (spec: "any files and directories"); device nodes are not listed; a non-UTF-8 name fails the walk.
 - 2026-11-14 — Accepted. Checked on turul-mcp-framework main (PR #52) in `turul-mcp-ext-skills`. `SkillEntry::from_dir` calls `load` and then `bundled_files`, and reads the bytes itself; it refuses a symlink that resolves outside the skill directory. The frontmatter projection uses `parse_skill_md`/`RawValue` (`typed` refuses non-string plain scalars). `SkillName` is re-exported from this crate. There is no directory walk over a skill and no YAML parser outside tests (`serde_yml` is a dev-dependency used as an independent oracle). The example server lists its skills root one level deep and loads each skill by explicit path, because `discover` shadows same-named skills while MCP paths can hold two skills with the same name.
+- 2026-11-14 — §2.4: `RawValue::core_scalar` provided for serving typed frontmatter (ADR-003); the map-key typed flag remains not provided.
