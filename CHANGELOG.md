@@ -5,7 +5,7 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
-## [0.1.4]
+## [0.1.4] - 2026-11-16
 
 ### Added
 
@@ -25,7 +25,7 @@ All notable changes to this project are documented here. The format follows
 - Render now quotes a leading-dot number with `_` separators (`.5_0`), which YAML 1.1 parsers read
   as a float; it was written plain.
 
-## [0.1.3]
+## [0.1.3] - 2026-11-14
 
 ### Added
 
